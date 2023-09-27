@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="78px" height="78px" viewBox="0 0 78 78" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Group 2</title>
+    <defs>
+        <linearGradient x1="10.4929716%" y1="0%" x2="92.2525491%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#0093ED" stop-opacity="0.1" offset="0%"></stop>
+            <stop stop-color="#00F3AB" stop-opacity="0.1" offset="100%"></stop>
+        </linearGradient>
+        <linearGradient x1="10.4929716%" y1="0%" x2="92.2525491%" y2="100%" id="linearGradient-2">
+            <stop stop-color="#0093ED" offset="0%"></stop>
+            <stop stop-color="#00F3AB" offset="100%"></stop>
+        </linearGradient>
+    </defs>
+    <g id="staker---staking-flow" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard-Copy-6" transform="translate(-123.000000, -247.000000)">
+            <g id="cosmos-logo-horizontal-dark" transform="translate(124.000000, 248.000000)">
+                <path d="M37.9999365,0 C58.9867462,0 76,17.0131586 76,37.9999365 C76,58.9867462 58.9867462,76 37.9999365,76 C17.0131586,76 0,58.9867462 0,37.9999365 C0,17.0131586 17.0131586,0 37.9999365,0 Z" id="Path" stroke-opacity="0.2" stroke="#00F3AB" fill="url(#linearGradient-1)"></path>
+                <path d="M24.2983587,38 L18.646737,43.646737 L13,38 L18.646737,32.353263 L24.2983587,38 Z M38,24.2885893 L47.6766315,33.9701055 L53.3233685,28.3233685 L38,13 L22.6766315,28.3233685 L28.3233685,33.9701055 L38,24.2885893 Z M57.3581477,32.353263 L51.7114107,38 L57.3581477,43.646737 L63,38 L57.3581477,32.353263 Z M38,51.7114107 L28.3233685,42.0347792 L22.6766315,47.6766315 L38,63 L53.3233685,47.6766315 L47.6766315,42.0347792 L38,51.7114107 Z M38,43.646737 L43.646737,38 L38,32.353263 L32.353263,38 L38,43.646737 Z" id="path16" fill="url(#linearGradient-2)" fill-rule="nonzero"></path>
+            </g>
+        </g>
+    </g>
+</svg>

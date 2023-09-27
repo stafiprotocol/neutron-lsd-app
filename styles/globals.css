@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  padding: 0;
+  margin: 0;
+  font-family: Roboto, "Arial", -apple-system, BlinkMacSystemFont, Segoe UI,
+    Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.005rem;
+  /* font-size: 70px; */
+  font-size: min(calc(100vw * 100 / 1280), 100px);
+}
+
+body {
+  padding: 0;
+  margin: 0;
+  font-family: Roboto, "Arial", -apple-system, BlinkMacSystemFont, Segoe UI,
+    Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  font-size: 0.16rem;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.005rem;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  /* color-scheme: dark; */
+}
+
+body {
+  /* color: white; */
+  /* background: #071526; */
+}
+
+/* @media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    color: white;
+    background: black;
+  }
+} */
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 1em;
+  background-color: rgba(50, 50, 50, 0.3);
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 1em;
+  background-color: rgba(50, 50, 50, 0.1);
+}
+
+@layer utilities {
+  .text-color-text1 {
+    @apply text-text1 dark:text-text1Dark;
+  }
+
+  .text-color-text2 {
+    @apply text-text2 dark:text-text2Dark;
+  }
+
+  .text-color-highlight {
+    @apply text-textHighlight dark:text-textHighlightDark;
+  }
+
+  .text-color-link {
+    @apply text-link dark:text-linkDark;
+  }
+
+  .bg-color-bgPage {
+    @apply bg-bgPage dark:bg-bgPageDark;
+  }
+
+  .bg-color-bg1 {
+    @apply bg-bg1 dark:bg-bg1Dark;
+  }
+
+  .bg-color-bg2 {
+    @apply bg-bg2 dark:bg-bg2Dark;
+  }
+
+  .bg-color-bg3 {
+    @apply bg-bg3 dark:bg-bg3Dark;
+  }
+
+  .bg-color-highlight {
+    @apply bg-bgHighlight dark:bg-bgHighlightDark;
+  }
+
+  .bg-color-selected {
+    @apply bg-white dark:bg-bgHighlightDark;
+  }
+
+  .bg-color-divider1 {
+    @apply bg-divider1 dark:bg-divider1Dark;
+  }
+
+  .bg-color-divider2 {
+    @apply bg-divider2 dark:bg-divider2Dark;
+  }
+
+  .bg-hover {
+    @apply hover:bg-bgHover dark:hover:bg-bgHoverDark;
+  }
+
+  .border-color-border1 {
+    @apply border-border1 dark:border-border1Dark;
+  }
+
+  .border-color-borderActive {
+    @apply border-borderActive dark:border-borderActiveDark;
+  }
+}

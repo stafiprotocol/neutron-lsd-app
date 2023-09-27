@@ -1,0 +1,16 @@
+{
+  "chain": {
+    "id": 56,
+    "name": "BSC Mainnet"
+  },
+  "rpc": "https://bsc-dataseed.binance.org/",
+  "explorer": "https://bscscan.com",
+  "contracts": {
+    "lsdToken": {
+      "address": "0xf027e525d491ef6ffcc478555fbb3cfabb3406a6"
+    },
+    "stakeManager": {
+      "address": "0x7cf64b27c95f856584fd4ef389f2646cfdc9fabf"
+    }
+  }
+}

@@ -1,0 +1,132 @@
+{
+  "appTitle": "EVM LSD App",
+  "token": {
+    "tokenName": "BNB",
+    "tokenDecimals": 18,
+    "lsdTokenName": "rBNB",
+    "supportChains": ["BSC"],
+    "tokenStandard": "BEP20",
+    "tokenChainName": "BSC Chain",
+    "lsdTokenIconUri": "https://cdn.stafi.io/rtoken/logo/rBNB.png",
+    "tokenImg": "/images/token/token_green.svg",
+    "lsdTokenImg": "/images/token/lsdToken.svg",
+    "chainImg": "/images/bsc_chain.svg"
+  },
+  "unstake": {
+    "lockTipLink": "https://docs.stafi.io/stakingbnb/#how-to-unstake",
+    "duration": "1 days"
+  },
+  "apr": 5,
+  "detailedInfo": {
+    "audit": {
+      "nameList": ["Blocksec"],
+      "link": "https://github.com/stafiprotocol/security/tree/main/audits/202306_BlockSec_StaFi-BNBStaking"
+    },
+    "listedIns": [
+      {
+        "name": "CoinGecko",
+        "link": "https://www.coingecko.com/en/coins/stafi-staked-bnb"
+      },
+      {
+        "name": "CoinMarketCap",
+        "link": "https://coinmarketcap.com/currencies/stafi-staked-bnb/"
+      }
+    ]
+  },
+  "auditList": [
+    {
+      "name": "PeckShield",
+      "icon": "/images/audit/peck_shield.svg",
+      "iconDark": "/images/audit/peck_shield_dark.svg"
+    },
+    {
+      "name": "BlockSec",
+      "icon": "/images/audit/block_sec.svg",
+      "iconDark": "/images/audit/block_sec_dark.svg"
+    }
+  ],
+  "faqList": [
+    {
+      "title": "What's the contract address of rBNB?",
+      "contents": [
+        {
+          "type": "text",
+          "content": "rBNB Contract Address:\n"
+        },
+        {
+          "type": "link",
+          "content": "0xf027e525d491ef6ffcc478555fbb3cfabb3406a6",
+          "link": "https://bscscan.com/address/0xf027e525d491ef6ffcc478555fbb3cfabb3406a6"
+        }
+      ]
+    },
+    {
+      "title": "What are the factors that affect the staking rewards?",
+      "contents": [
+        {
+          "type": "text",
+          "content": "Reward normally is updated every 24 hours.\n"
+        },
+        {
+          "type": "text",
+          "content": "rBNB liquid staking rewards are mainly decided by the BSC chain's staking APR, delegation strategy and the original validator's slash risks."
+        }
+      ]
+    },
+    {
+      "title": "How to calculate rBNB exchange rate?",
+      "contents": [
+        {
+          "type": "text",
+          "content": "rBNB exchange rate is recording how many BNBs could be unstaked with 1 rBNB token. It will start from 1 and gradually increase along with the staking rewards generated continuously.\n"
+        },
+        {
+          "type": "link",
+          "content": "Check more details",
+          "link": "https://docs.stafi.io/rtoken/#rtoken-exchange-rate"
+        }
+      ]
+    }
+  ],
+  "externalLinkList": [
+    {
+      "name": "Docs",
+      "link": "https://docs.stafi.io/"
+    },
+    {
+      "name": "Website",
+      "link": "https://www.stafi.io/"
+    },
+    {
+      "name": "DAO Forum",
+      "link": "https://dao.stafi.io/"
+    },
+    {
+      "name": "Dune Dashboard",
+      "link": "https://dune.com/stafi-analysis/stafi"
+    },
+    {
+      "name": "rBNB Listing",
+      "link": "https://docs.stafi.io/"
+    }
+  ],
+  "contactList": [
+    {
+      "type": "Twitter",
+      "link": "https://twitter.com/Stafi_Protocol"
+    },
+    {
+      "type": "Medium",
+      "link": "https://stafi-protocol.medium.com/"
+    },
+    {
+      "type": "Discord",
+      "link": "https://discord.com/invite/jB77etn"
+    },
+    {
+      "type": "Telegram",
+      "link": "https://t.me/stafi_protocol"
+    }
+  ],
+  "gasPriceUrl": "https://beaconcha.in/api/v1/execution/gasnow"
+}
