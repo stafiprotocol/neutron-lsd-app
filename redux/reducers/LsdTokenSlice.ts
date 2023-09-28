@@ -116,46 +116,35 @@ export const updateLsdTokenRate =
 export const updateApr = (): AppThunk => async (dispatch, getState) => {
   let apr = getDefaultApr();
   try {
-    // const web3 = getWeb3();
-    // const currentBlock = await web3.eth.getBlockNumber();
-    // const contract = new web3.eth.Contract(
-    //   getNetworkBalanceContractAbi(),
-    //   getNetworkBalanceContract()
-    // );
-    // const topics = web3.utils.sha3(
-    //   "BalancesUpdated(uint256,uint256,uint256,uint256)"
-    // );
-    // const events = await contract.getPastEvents("allEvents", {
-    //   fromBlock: currentBlock - Math.floor((1 / 12) * 60 * 60 * 24 * 7),
-    //   toBlock: currentBlock,
-    // });
-    // let apr = getDefaultApr();
-    // const balancesUpdatedEvents = events
-    //   .filter((e) => e.raw.topics.length === 1 && e.raw.topics[0] === topics)
-    //   .sort((a, b) => a.blockNumber - b.blockNumber);
-    // if (balancesUpdatedEvents.length > 1) {
-    //   const beginEvent = balancesUpdatedEvents[0];
-    //   const endEvent = balancesUpdatedEvents[balancesUpdatedEvents.length - 1];
-    //   const beginValues: any = decodeBalancesUpdatedLog(
-    //     beginEvent.raw.data,
-    //     beginEvent.raw.topics
-    //   );
-    //   const endValues: any = decodeBalancesUpdatedLog(
-    //     endEvent.raw.data,
-    //     endEvent.raw.topics
-    //   );
-    //   console.log({ beginValues, endValues });
-    //   const beginRate = beginValues.totalEth / beginValues.lsdTokenSupply;
-    //   const endRate = endValues.totalEth / endValues.lsdTokenSupply;
-    //   if (
-    //     !isNaN(beginRate) &&
-    //     isNaN(endRate) &&
-    //     endRate !== 1 &&
-    //     beginRate !== 1
-    //   ) {
-    //     apr = ((endRate - beginRate) / 7) * 365.25 * 100;
-    //   }
-    // }
+    const web3 = getWeb3();
+    const contract = new web3.eth.Contract(
+      getStakeManagerContractAbi(),
+      getStakeManagerContract()
+    );
+
+    const eraSeconds = await contract.methods.eraSeconds().call();
+    if (!eraSeconds) return;
+    const currentEra = await contract.methods.currentEra().call();
+    if (!currentEra) return;
+
+    // 7 days before
+    const numEras = (60 * 60 * 24 * 7) / Number(eraSeconds);
+
+    const beginRate = await contract.methods
+      .eraRate(currentEra - numEras)
+      .call();
+    const endRate = await contract.methods.getRate().call();
+
+    if (
+      !isNaN(beginRate) &&
+      !isNaN(endRate) &&
+      endRate !== 1 &&
+      beginRate !== 1 &&
+      beginRate !== endRate
+    ) {
+      apr = ((endRate - beginRate) / 7) * 365.25 * 100;
+    }
+
     dispatch(setApr(apr));
   } catch (err: any) {
     dispatch(setApr(apr));
