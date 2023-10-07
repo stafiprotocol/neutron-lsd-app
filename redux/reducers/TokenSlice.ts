@@ -62,6 +62,7 @@ export interface TokenState {
   latestBlockTimestamp: string;
   withdrawInfo: WithdrawInfo;
   relayFee: RelayFee;
+  tokenPrice: number | undefined;
 }
 
 const initialState: TokenState = {
@@ -78,6 +79,7 @@ const initialState: TokenState = {
     unstake: undefined,
     withdraw: undefined,
   },
+  tokenPrice: undefined,
 };
 
 export const tokenSlice = createSlice({
@@ -111,6 +113,9 @@ export const tokenSlice = createSlice({
     setRelayFee: (state: TokenState, action: PayloadAction<RelayFee>) => {
       state.relayFee = action.payload;
     },
+    setTokenPrice: (state: TokenState, action: PayloadAction<number>) => {
+      state.tokenPrice = action.payload;
+    },
   },
 });
 
@@ -120,6 +125,7 @@ export const {
   setLatestBlockTimestamp,
   setWithdrawInfo,
   setRelayFee,
+  setTokenPrice,
 } = tokenSlice.actions;
 
 export default tokenSlice.reducer;

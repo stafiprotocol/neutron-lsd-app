@@ -11,7 +11,7 @@ import {
   getStakeManagerContract,
   getStakeManagerContractAbi,
 } from "config/contract";
-import { getDefaultApr } from "utils/configUtils";
+import { getDefaultApr, getTokenDecimals } from "utils/configUtils";
 
 export interface LsdTokenState {
   balance: string | undefined; // balance of lsdToken
@@ -19,6 +19,7 @@ export interface LsdTokenState {
   apr: number | undefined; // lsdToken apr
   price: string | undefined; // price of lsdToken
   unbondingDuration: number | undefined;
+  lsdTokenPrice: number | undefined;
 }
 
 const initialState: LsdTokenState = {
@@ -27,6 +28,7 @@ const initialState: LsdTokenState = {
   apr: undefined,
   price: undefined,
   unbondingDuration: undefined,
+  lsdTokenPrice: undefined,
 };
 
 export const lsdTokenSlice = createSlice({
@@ -54,11 +56,20 @@ export const lsdTokenSlice = createSlice({
     ) => {
       state.unbondingDuration = action.payload;
     },
+    setLsdTokenPrice: (state: LsdTokenState, aciton: PayloadAction<number>) => {
+      state.lsdTokenPrice = aciton.payload;
+    },
   },
 });
 
-export const { setBalance, setRate, setPrice, setApr, setUnbondingDuration } =
-  lsdTokenSlice.actions;
+export const {
+  setBalance,
+  setRate,
+  setPrice,
+  setApr,
+  setUnbondingDuration,
+  setLsdTokenPrice,
+} = lsdTokenSlice.actions;
 
 export default lsdTokenSlice.reducer;
 
@@ -142,7 +153,9 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
       beginRate !== 1 &&
       beginRate !== endRate
     ) {
-      apr = ((endRate - beginRate) / 7) * 365.25 * 100;
+      apr =
+        (((endRate - beginRate) / 7) * 365.25 * 100) /
+        Math.pow(10, getTokenDecimals());
     }
 
     dispatch(setApr(apr));

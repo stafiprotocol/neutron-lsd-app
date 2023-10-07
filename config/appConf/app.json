@@ -128,5 +128,7 @@
       "link": "https://t.me/stafi_protocol"
     }
   ],
-  "gasPriceUrl": "https://beaconcha.in/api/v1/execution/gasnow"
+  "gasPriceUrl": "https://beaconcha.in/api/v1/execution/gasnow",
+  "tokenPriceUrl": "https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd",
+  "lsdTokenPriceUrl": "https://api.coingecko.com/api/v3/simple/price?ids=stafi-staked-bnb&vs_currencies=usd"
 }

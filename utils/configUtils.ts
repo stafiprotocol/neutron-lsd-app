@@ -10,6 +10,10 @@ export function getLsdTokenName() {
   return appConfig.token.lsdTokenName;
 }
 
+export function getTokenDecimals() {
+  return appConfig.token.tokenDecimals;
+}
+
 export function getAppTitle() {
   return appConfig.appTitle;
 }
@@ -62,6 +66,14 @@ export function getAuditList() {
 
 export function getGasPriceUrl() {
   return appConfig.gasPriceUrl;
+}
+
+export function getTokenPriceUrl() {
+  return appConfig.tokenPriceUrl;
+}
+
+export function getLsdTokenPriceUrl() {
+  return appConfig.lsdTokenPriceUrl;
 }
 
 export function getDefaultApr() {
