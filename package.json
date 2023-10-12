@@ -5,7 +5,7 @@
     "dev": "NEXT_PUBLIC_ENV=dev next dev -p 5001",
     "build:dev": "NEXT_PUBLIC_ENV=dev next build",
     "build": "NEXT_PUBLIC_ENV=production next build",
-    "start": "next start -p 5002"
+    "start": "next start -p 5005"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
