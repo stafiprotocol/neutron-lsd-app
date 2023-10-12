@@ -7,10 +7,10 @@
   "explorer": "https://testnet.bscscan.com",
   "contracts": {
     "lsdToken": {
-      "address": "0xa05b158da3e58f6f9f8bf2473bc5cbfe3d70bc48"
+      "address": "0x1d6e3423d2cccf068fae1f787f7626d7a965bca9"
     },
     "stakeManager": {
-      "address": "0x03096ee2488932f1f7c262914646917687416c10"
+      "address": "0x9c0f06f6769247dd663ef0602e09f26b293c12df"
     }
   }
 }
