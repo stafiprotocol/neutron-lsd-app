@@ -55,7 +55,7 @@ export const LsdTokenUnstake = () => {
   const { relayFee } = useRelayFee();
 
   const { apr } = useApr();
-  const { tokenPrice, lsdTokenPrice, gasPrice } = usePrice();
+  const { tokenPrice, gasPrice } = usePrice();
 
   const [unstakeAmount, setUnstakeAmount] = useState("");
 
@@ -107,12 +107,13 @@ export const LsdTokenUnstake = () => {
       !unstakeAmount ||
       isNaN(Number(unstakeAmount)) ||
       Number(unstakeAmount) === 0 ||
-      isNaN(Number(lsdTokenPrice))
+      isNaN(Number(tokenPrice)) ||
+      isNaN(Number(lsdTokenRate))
     ) {
       return undefined;
     }
-    return Number(unstakeAmount) * Number(lsdTokenPrice);
-  }, [unstakeAmount, lsdTokenPrice]);
+    return Number(unstakeAmount) * Number(tokenPrice) * Number(lsdTokenRate);
+  }, [unstakeAmount, tokenPrice, lsdTokenRate]);
 
   const estimateFee = useMemo(() => {
     const gasLimit = 269319;

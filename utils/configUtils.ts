@@ -56,24 +56,12 @@ export function getUnstakeTipLink() {
   return appConfig.unstake.lockTipLink;
 }
 
-export function getUnstakeDuration() {
-  return appConfig.unstake.duration;
-}
-
 export function getAuditList() {
   return appConfig.auditList;
 }
 
-export function getGasPriceUrl() {
-  return appConfig.gasPriceUrl;
-}
-
 export function getTokenPriceUrl() {
   return appConfig.tokenPriceUrl;
-}
-
-export function getLsdTokenPriceUrl() {
-  return appConfig.lsdTokenPriceUrl;
 }
 
 export function getDefaultApr() {
