@@ -1,4 +1,6 @@
-import { Fade, ThemeProvider, styled } from "@mui/material";
+import { styled } from "@mui/material/styles";
+import Fade from "@mui/material/Fade";
+import ThemeProvider from "@mui/styles/ThemeProvider";
 import { Layout } from "components/layout/Layout";
 import { useAppSlice } from "hooks/selector";
 import type { NextPage } from "next";
