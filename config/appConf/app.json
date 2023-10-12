@@ -35,11 +35,6 @@
   },
   "auditList": [
     {
-      "name": "PeckShield",
-      "icon": "/images/audit/peck_shield.svg",
-      "iconDark": "/images/audit/peck_shield_dark.svg"
-    },
-    {
       "name": "BlockSec",
       "icon": "/images/audit/block_sec.svg",
       "iconDark": "/images/audit/block_sec_dark.svg"
