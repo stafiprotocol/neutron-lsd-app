@@ -21,11 +21,8 @@ import {
 } from "redux/reducers/AppSlice";
 import { handleLsdTokenUnstake } from "redux/reducers/TokenSlice";
 import { RootState } from "redux/store";
-import {
-  getLsdTokenName,
-  getTokenName,
-  getUnstakeDuration,
-} from "utils/configUtils";
+import { getLsdTokenName, getTokenName } from "utils/configUtils";
+import { getUnstakeDaysLeft } from "utils/lsdTokenUtils";
 import { formatNumber } from "utils/numberUtils";
 import snackbarUtil from "utils/snackbarUtils";
 import { useContractWrite } from "wagmi";
@@ -33,11 +30,12 @@ import { useContractWrite } from "wagmi";
 export const UnstakeLoadingModal = () => {
   const dispatch = useAppDispatch();
 
-  const { unstakeLoadingParams, darkMode } = useAppSelector(
+  const { unstakeLoadingParams, darkMode, unbondingDuration } = useAppSelector(
     (state: RootState) => {
       return {
         unstakeLoadingParams: state.app.unstakeLoadingParams,
         darkMode: state.app.darkMode,
+        unbondingDuration: state.lsdToken.unbondingDuration,
       };
     }
   );
@@ -76,7 +74,9 @@ export const UnstakeLoadingModal = () => {
     return unstakeLoadingParams?.customMsg
       ? unstakeLoadingParams.customMsg
       : unstakeLoadingParams?.status === "success"
-      ? `Unstaking operation was successful. It takes Est. ${getUnstakeDuration()} to complete the unstake operation`
+      ? `Unstaking operation was successful. It takes Est. ${getUnstakeDaysLeft(
+          unbondingDuration
+        )} to complete the unstake operation`
       : unstakeLoadingParams?.status === "error"
       ? unstakeLoadingParams?.errorMsg ||
         "Something went wrong, please try again"

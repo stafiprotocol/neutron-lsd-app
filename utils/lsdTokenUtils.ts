@@ -1,7 +1,9 @@
-import { getUnstakeDuration } from "./configUtils";
-
 export function getUnstakeDaysLeft(unbondingDuration?: number) {
-  return unbondingDuration
-    ? (unbondingDuration / 86400).toFixed(0)
-    : getUnstakeDuration();
+  const defaultDuration = "1 day";
+  if (!unbondingDuration) return defaultDuration;
+  const duration = (Number(unbondingDuration) / 86400).toFixed(0);
+  if (duration === "1") {
+    return defaultDuration;
+  }
+  return `${duration} days`;
 }

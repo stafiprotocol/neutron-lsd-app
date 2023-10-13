@@ -13,8 +13,7 @@
     "chainImg": "/images/bsc_chain.svg"
   },
   "unstake": {
-    "lockTipLink": "https://docs.stafi.io/stakingbnb/#how-to-unstake",
-    "duration": "1 days"
+    "lockTipLink": "https://docs.stafi.io/stakingbnb/#how-to-unstake"
   },
   "apr": 5,
   "detailedInfo": {
@@ -35,31 +34,12 @@
   },
   "auditList": [
     {
-      "name": "PeckShield",
-      "icon": "/images/audit/peck_shield.svg",
-      "iconDark": "/images/audit/peck_shield_dark.svg"
-    },
-    {
       "name": "BlockSec",
       "icon": "/images/audit/block_sec.svg",
       "iconDark": "/images/audit/block_sec_dark.svg"
     }
   ],
   "faqList": [
-    {
-      "title": "What's the contract address of rBNB?",
-      "contents": [
-        {
-          "type": "text",
-          "content": "rBNB Contract Address:\n"
-        },
-        {
-          "type": "link",
-          "content": "0xf027e525d491ef6ffcc478555fbb3cfabb3406a6",
-          "link": "https://bscscan.com/address/0xf027e525d491ef6ffcc478555fbb3cfabb3406a6"
-        }
-      ]
-    },
     {
       "title": "What are the factors that affect the staking rewards?",
       "contents": [
@@ -128,7 +108,5 @@
       "link": "https://t.me/stafi_protocol"
     }
   ],
-  "gasPriceUrl": "https://beaconcha.in/api/v1/execution/gasnow",
-  "tokenPriceUrl": "https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd",
-  "lsdTokenPriceUrl": "https://api.coingecko.com/api/v3/simple/price?ids=stafi-staked-bnb&vs_currencies=usd"
+  "tokenPriceUrl": "https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd"
 }

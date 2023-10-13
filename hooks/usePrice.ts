@@ -1,28 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  getGasPriceUrl,
-  getLsdTokenPriceUrl,
-  getTokenPriceUrl,
-} from "utils/configUtils";
+import { getTokenPriceUrl } from "utils/configUtils";
 import { useAppSlice } from "./selector";
 import { useAppDispatch, useAppSelector } from "./common";
 import { setTokenPrice } from "redux/reducers/TokenSlice";
 import { RootState } from "redux/store";
 import dayjs from "dayjs";
-import { setLsdTokenPrice } from "redux/reducers/LsdTokenSlice";
 
 export function usePrice() {
   const { updateFlag } = useAppSlice();
   const dispatch = useAppDispatch();
 
-  const { tokenPrice, lsdTokenPrice } = useAppSelector((state: RootState) => {
+  const { tokenPrice } = useAppSelector((state: RootState) => {
     return {
       tokenPrice: state.token.tokenPrice,
-      lsdTokenPrice: state.lsdToken.lsdTokenPrice,
     };
   });
 
-  const [gasPrice, setGasPrice] = useState(0);
+  const [gasPrice, setGasPrice] = useState(3);
 
   // todo:
   const fetchGasPrice = useCallback(async () => {
@@ -54,27 +48,8 @@ export function usePrice() {
       });
       const resJson = await response.json();
       if (resJson) {
-        console.log({ resJson });
         const { usd } = resJson.binancecoin;
         dispatch(setTokenPrice(usd));
-      }
-    } catch (err: any) {}
-  }, [updateFlag]);
-
-  const fetchLsdTokenPrice = useCallback(async () => {
-    const currentTImestamp = dayjs().unix();
-    if (currentTImestamp - updateFlag < 30) return; // 30s
-    try {
-      const response = await fetch(getLsdTokenPriceUrl(), {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      const resJson = await response.json();
-      if (resJson) {
-        const { usd } = resJson["stafi-staked-bnb"];
-        dispatch(setLsdTokenPrice(usd));
       }
     } catch (err: any) {}
   }, [updateFlag]);
@@ -82,12 +57,10 @@ export function usePrice() {
   useEffect(() => {
     fetchGasPrice();
     fetchTokenPrice();
-    fetchLsdTokenPrice();
   }, [updateFlag]);
 
   return {
-    gasPrice: 3,
+    gasPrice,
     tokenPrice,
-    lsdTokenPrice,
   };
 }
