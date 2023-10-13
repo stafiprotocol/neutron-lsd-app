@@ -8,7 +8,7 @@ import { useMemo, useState } from "react";
 import { handleLsdTokenUnstake } from "redux/reducers/TokenSlice";
 import { updateLsdTokenBalance } from "redux/reducers/LsdTokenSlice";
 import { RootState } from "redux/store";
-import { openLink } from "utils/commonUtils";
+import { isEmptyValue, openLink } from "utils/commonUtils";
 import { formatLargeAmount, formatNumber } from "utils/numberUtils";
 import Web3 from "web3";
 import { CustomButton } from "../common/CustomButton";
@@ -41,6 +41,7 @@ import {
   getStakeManagerContractAbi,
 } from "config/contract";
 import { usePrice } from "hooks/usePrice";
+import { BubblesLoading } from "components/common/BubblesLoading";
 
 export const LsdTokenUnstake = () => {
   const router = useRouter();
@@ -121,7 +122,8 @@ export const LsdTokenUnstake = () => {
       Web3.utils
         .toBN(gasLimit)
         .mul(Web3.utils.toBN(Number(gasPrice)))
-        .toString()
+        .toString(),
+      "gwei"
     );
   }, [gasPrice]);
 
@@ -288,6 +290,11 @@ export const LsdTokenUnstake = () => {
     popupId: "rate",
   });
 
+  const txFeePopupState = usePopupState({
+    variant: "popover",
+    popupId: "txFee",
+  });
+
   return (
     <div>
       <div
@@ -449,8 +456,26 @@ export const LsdTokenUnstake = () => {
               Est. Cost
             </div>
 
-            <div className="mt-[.1rem] text-color-text2 text-[.16rem]">
-              ${formatNumber(transactionCostValue, { decimals: 2 })}
+            <div className="mt-[.1rem] flex items-center cursor-pointer">
+              <div
+                className="text-color-text2 text-[.16rem]"
+                {...bindHover(txFeePopupState)}
+              >
+                ${formatNumber(transactionCostValue, { decimals: 2 })}
+              </div>
+              <div
+                className={classNames(
+                  "ml-[.06rem] flex items-center relative self-center",
+                  txFeePopupState.isOpen ? "rotate-[270deg]" : "rotate-90"
+                )}
+              >
+                <Icomoon
+                  icon="right"
+                  size=".12rem"
+                  color="#6C86AD"
+                  layout="fill"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -494,6 +519,86 @@ export const LsdTokenUnstake = () => {
           <div className="text-center leading-[150%]">Exchange Rate</div>
           <div className="text-center mt-[.08rem] leading-[150%]">
             1:{formatNumber(lsdTokenRate, { decimals: 6 })}
+          </div>
+        </div>
+      </HoverPopover>
+
+      <HoverPopover
+        {...bindPopover(txFeePopupState)}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "center",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "center",
+        }}
+        elevation={0}
+        sx={{
+          marginTop: ".15rem",
+          "& .MuiPopover-paper": {
+            background: darkMode ? "#6C86AD4D" : "#ffffff80",
+            border: darkMode
+              ? "0.01rem solid #6C86AD80"
+              : "0.01rem solid #FFFFFF",
+            backdropFilter: "blur(.4rem)",
+            borderRadius: ".3rem",
+          },
+          "& .MuiTypography-root": {
+            padding: "0px",
+          },
+          "& .MuiBox-root": {
+            padding: "0px",
+          },
+        }}
+      >
+        <div
+          className={classNames(
+            "text-color-text2 w-[2.5rem] p-[.16rem] text-[.14rem]",
+            darkMode ? "dark" : ""
+          )}
+        >
+          <div className="flex justify-between">
+            <div>Relay Fee</div>
+            <div>
+              {isEmptyValue(relayFee.unstake) ? (
+                <BubblesLoading />
+              ) : (
+                formatNumber(relayFee.unstake, { decimals: 4 })
+              )}{" "}
+              {getTokenName()}
+            </div>
+          </div>
+          <div className="flex justify-between my-[.16rem]">
+            <div>Tx Fee</div>
+            <div>
+              {isEmptyValue(estimateFee) ? (
+                <BubblesLoading />
+              ) : (
+                formatNumber(estimateFee, { decimals: 4 })
+              )}{" "}
+              {getTokenName()}
+            </div>
+          </div>
+          <div className="h-[1px] bg-color-popoverDivider my-[.1rem]" />
+          <div className="text-color-text1 flex items-start justify-between mt-[.16rem]">
+            <div>Overall Tx Fee</div>
+            <div className="flex items-center">
+              {isEmptyValue(transactionCost) ? (
+                <BubblesLoading />
+              ) : (
+                formatNumber(transactionCost, { decimals: 4 })
+              )}{" "}
+              {getTokenName()}
+            </div>
+          </div>
+          <div className="mt-[.16rem] text-right flex items-center justify-end mb-[.16rem]">
+            ~$
+            {isEmptyValue(transactionCostValue) ? (
+              <BubblesLoading />
+            ) : (
+              formatNumber(transactionCostValue, { decimals: 4 })
+            )}
           </div>
         </div>
       </HoverPopover>
