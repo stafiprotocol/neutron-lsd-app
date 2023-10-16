@@ -84,3 +84,7 @@ export function getWagmiNetwork() {
   }
   return mainnet;
 }
+
+export function needRelayFee() {
+  return appConfig.needRelayFee;
+}

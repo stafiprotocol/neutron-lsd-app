@@ -16,6 +16,7 @@
     "lockTipLink": "https://docs.stafi.io/stakingbnb/#how-to-unstake"
   },
   "apr": 5,
+  "needRelayFee": true,
   "detailedInfo": {
     "audit": {
       "nameList": ["Blocksec"],

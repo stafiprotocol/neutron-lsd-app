@@ -17,7 +17,7 @@ import { getEvmChainId } from "config/env";
 import { useRelayFee } from "hooks/useRelayFee";
 import snackbarUtil from "utils/snackbarUtils";
 import { NETWORK_ERR_MESSAGE } from "constants/common";
-import { getTokenName } from "utils/configUtils";
+import { getTokenName, needRelayFee } from "utils/configUtils";
 import { formatWithdrawRemaingTime } from "utils/timeUtils";
 
 interface Props {
@@ -54,7 +54,7 @@ export const WithdrawUnstaked = (props: Props) => {
     if (withdrawDisabled) {
       return;
     }
-    if (isNaN(Number(relayFee.withdraw))) {
+    if (needRelayFee() && isNaN(Number(relayFee.withdraw))) {
       snackbarUtil.error(NETWORK_ERR_MESSAGE);
       return;
     }

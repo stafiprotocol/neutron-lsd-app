@@ -18,6 +18,7 @@ import {
   getLsdTokenName,
   getTokenName,
   getUnstakeTipLink,
+  needRelayFee,
 } from "utils/configUtils";
 import Image from "next/image";
 import { getLsdTokenIcon } from "utils/iconUtils";
@@ -129,10 +130,17 @@ export const LsdTokenUnstake = () => {
   }, [gasPrice]);
 
   const transactionCost = useMemo(() => {
-    if (isNaN(Number(relayFee.unstake)) || isNaN(Number(estimateFee))) {
-      return "--";
+    if (!needRelayFee()) {
+      if (isNaN(Number(estimateFee))) {
+        return "--";
+      }
+      return Number(estimateFee) + "";
+    } else {
+      if (isNaN(Number(relayFee.unstake)) || isNaN(Number(estimateFee))) {
+        return "--";
+      }
+      return Number(relayFee.unstake) + Number(estimateFee) + "";
     }
-    return Number(relayFee.unstake) + Number(estimateFee) + "";
   }, [relayFee, estimateFee]);
 
   const transactionCostValue = useMemo(() => {
@@ -262,7 +270,7 @@ export const LsdTokenUnstake = () => {
       clickConnectWallet();
       return;
     }
-    if (isNaN(Number(relayFee.unstake))) {
+    if (needRelayFee() && isNaN(Number(relayFee.unstake))) {
       snackbarUtil.error(NETWORK_ERR_MESSAGE);
       return;
     }
@@ -559,17 +567,19 @@ export const LsdTokenUnstake = () => {
             darkMode ? "dark" : ""
           )}
         >
-          <div className="flex justify-between">
-            <div>Relay Fee</div>
-            <div>
-              {isEmptyValue(relayFee.unstake) ? (
-                <BubblesLoading />
-              ) : (
-                formatNumber(relayFee.unstake, { decimals: 4 })
-              )}{" "}
-              {getTokenName()}
+          {needRelayFee() && (
+            <div className="flex justify-between">
+              <div>Relay Fee</div>
+              <div>
+                {isEmptyValue(relayFee.unstake) ? (
+                  <BubblesLoading />
+                ) : (
+                  formatNumber(relayFee.unstake, { decimals: 4 })
+                )}{" "}
+                {getTokenName()}
+              </div>
             </div>
-          </div>
+          )}
           <div className="flex justify-between my-[.16rem]">
             <div>Tx Fee</div>
             <div>

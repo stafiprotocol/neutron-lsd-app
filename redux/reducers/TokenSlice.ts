@@ -678,7 +678,7 @@ export const updateStakeRelayFee =
       let feeResult = await stakeManagerContract.methods
         .getStakeRelayerFee()
         .call();
-      feeResult = feeResult || "1000000000000000"; // 0.001
+      feeResult = feeResult || "0";
       const fee = web3.utils.fromWei(feeResult);
       const relayFee = getState().token.relayFee;
       dispatch(
@@ -704,7 +704,7 @@ export const updateUnstakeRelayFee =
       let feeResult = await stakeManagerContract.methods
         .getUnstakeRelayerFee()
         .call();
-      feeResult = feeResult || "1000000000000000"; // 0.001
+      feeResult = feeResult || "0";
       const fee = web3.utils.fromWei(feeResult);
       // console.log({ fee });
       const relayFee = getState().token.relayFee;
@@ -731,6 +731,7 @@ export const updateWithdrawRelayFee =
       let feeResult = await stakeManagerContract.methods
         .CROSS_DISTRIBUTE_RELAY_FEE()
         .call();
+      feeResult = feeResult || "0";
       const fee = web3.utils.fromWei(feeResult);
       // console.log({ withdraw: fee });
       const relayFee = getState().token.relayFee;

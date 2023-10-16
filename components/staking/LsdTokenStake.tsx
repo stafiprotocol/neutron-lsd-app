@@ -18,7 +18,7 @@ import { CustomNumberInput } from "../common/CustomNumberInput";
 import { DataLoading } from "../common/DataLoading";
 import { getTokenIcon } from "utils/iconUtils";
 import { useBalance } from "hooks/useBalance";
-import { getLsdTokenName, getTokenName } from "utils/configUtils";
+import { getLsdTokenName, getTokenName, needRelayFee } from "utils/configUtils";
 import { useApr } from "hooks/useApr";
 import { useAppSlice } from "hooks/selector";
 import HoverPopover from "material-ui-popup-state/HoverPopover";
@@ -117,10 +117,17 @@ export const LsdTokenStake = () => {
   }, [gasPrice]);
 
   const transactionCost = useMemo(() => {
-    if (isNaN(Number(estimateFee)) || isNaN(Number(relayFee.stake))) {
-      return "--";
+    if (!needRelayFee()) {
+      if (isNaN(Number(estimateFee))) {
+        return "--";
+      }
+      return Number(estimateFee) + "";
+    } else {
+      if (isNaN(Number(estimateFee)) || isNaN(Number(relayFee.stake))) {
+        return "--";
+      }
+      return Number(estimateFee) + Number(relayFee.stake) + "";
     }
-    return Number(estimateFee) + Number(relayFee.stake) + "";
   }, [estimateFee, relayFee]);
 
   const transactionCostValue = useMemo(() => {
@@ -233,7 +240,7 @@ export const LsdTokenStake = () => {
       clickConnectWallet();
       return;
     }
-    if (isNaN(Number(relayFee.stake))) {
+    if (needRelayFee() && isNaN(Number(relayFee.stake))) {
       snackbarUtil.error(NETWORK_ERR_MESSAGE);
       return;
     }
@@ -509,17 +516,19 @@ export const LsdTokenStake = () => {
             darkMode ? "dark" : ""
           )}
         >
-          <div className="flex justify-between">
-            <div>Relay Fee</div>
-            <div>
-              {isEmptyValue(relayFee.stake) ? (
-                <BubblesLoading />
-              ) : (
-                formatNumber(relayFee.stake, { decimals: 4 })
-              )}{" "}
-              {getTokenName()}
+          {needRelayFee() && (
+            <div className="flex justify-between">
+              <div>Relay Fee</div>
+              <div>
+                {isEmptyValue(relayFee.stake) ? (
+                  <BubblesLoading />
+                ) : (
+                  formatNumber(relayFee.stake, { decimals: 4 })
+                )}{" "}
+                {getTokenName()}
+              </div>
             </div>
-          </div>
+          )}
           <div className="flex justify-between my-[.16rem]">
             <div>Tx Fee</div>
             <div>
