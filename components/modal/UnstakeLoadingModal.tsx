@@ -85,7 +85,7 @@ export const UnstakeLoadingModal = () => {
         } ${getLsdTokenName()}, you will receive ${formatNumber(
           unstakeLoadingParams?.willReceiveAmount
         )} ${getTokenName()}`;
-  }, [unstakeLoadingParams]);
+  }, [unstakeLoadingParams, unbondingDuration]);
 
   const closeModal = () => {
     if (unstakeLoadingParams?.status !== "loading") {
