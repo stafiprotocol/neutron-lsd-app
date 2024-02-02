@@ -1,17 +1,15 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { StakeManager } from "codegen/neutron";
+import { neutronChainConfig } from "config/chain";
+import { getPoolAddress, getStakeManagerContract } from "config/contract";
 import { AppThunk } from "redux/store";
-import {
-  decodeBalancesUpdatedLog,
-  getErc20AssetBalance,
-  getWeb3,
-} from "utils/web3Utils";
-import {
-  getLsdTokenContract,
-  getLsdTokenContractAbi,
-  getStakeManagerContract,
-  getStakeManagerContractAbi,
-} from "config/contract";
 import { getDefaultApr, getTokenDecimals } from "utils/configUtils";
+import {
+  getNeutronLsdTokenBalance,
+  getNeutronPoolInfo,
+  getNeutronWasmClient,
+} from "utils/cosmosUtils";
+import { chainAmountToHuman } from "utils/numberUtils";
 
 export interface LsdTokenState {
   balance: string | undefined; // balance of lsdToken
@@ -84,16 +82,11 @@ export const clearLsdTokenBalance =
 export const updateLsdTokenBalance =
   (): AppThunk => async (dispatch, getState) => {
     try {
-      const metaMaskAccount = getState().wallet.metaMaskDisconnected
-        ? undefined
-        : getState().wallet.metaMaskAccount;
+      const neutronAccount =
+        getState().wallet.cosmosAccounts[neutronChainConfig.chainId];
 
-      const tokenAbi = getLsdTokenContractAbi();
-      const tokenAddress = getLsdTokenContract();
-      const newBalance = await getErc20AssetBalance(
-        metaMaskAccount,
-        tokenAbi,
-        tokenAddress
+      const newBalance = await getNeutronLsdTokenBalance(
+        neutronAccount?.bech32Address
       );
       dispatch(setBalance(newBalance));
     } catch (err: unknown) {}
@@ -107,13 +100,8 @@ export const updateLsdTokenRate =
     try {
       let newRate = "--";
 
-      const web3 = getWeb3();
-      let contract = new web3.eth.Contract(
-        getStakeManagerContractAbi(),
-        getStakeManagerContract()
-      );
-      const result = await contract.methods.getRate().call();
-      newRate = web3.utils.fromWei(result + "", "ether");
+      const poolInfo = await getNeutronPoolInfo();
+      newRate = chainAmountToHuman(poolInfo?.rate);
 
       dispatch(setRate(newRate));
     } catch (err: unknown) {
@@ -127,24 +115,39 @@ export const updateLsdTokenRate =
 export const updateApr = (): AppThunk => async (dispatch, getState) => {
   let apr = getDefaultApr();
   try {
-    const web3 = getWeb3();
-    const contract = new web3.eth.Contract(
-      getStakeManagerContractAbi(),
-      getStakeManagerContract()
-    );
+    const poolInfo = await getNeutronPoolInfo();
+    if (!poolInfo) {
+      return;
+    }
 
-    const eraSeconds = await contract.methods.eraSeconds().call();
-    if (!eraSeconds) return;
-    const currentEra = await contract.methods.currentEra().call();
-    if (!currentEra) return;
+    const eraSeconds = poolInfo.era_seconds;
+    const currentEra = poolInfo.era;
 
     // 7 days before
     const numEras = (60 * 60 * 24 * 7) / Number(eraSeconds);
 
-    const beginRate = await contract.methods
-      .eraRate(currentEra - numEras)
-      .call();
-    const endRate = await contract.methods.getRate().call();
+    const cosmWasmClient = await getNeutronWasmClient();
+
+    const stakeManagerClient = new StakeManager.Client(
+      cosmWasmClient,
+      getStakeManagerContract()
+    );
+
+    const beginRateRes = await stakeManagerClient.queryEraRate({
+      pool_addr: getPoolAddress(),
+      era: currentEra - numEras,
+    });
+
+    const endRateRes = await stakeManagerClient.queryEraRate({
+      pool_addr: getPoolAddress(),
+      era: currentEra,
+    });
+
+    console.log({ beginRateRes });
+    console.log({ endRateRes });
+
+    const beginRate = Number(beginRateRes);
+    const endRate = Number(endRateRes);
 
     if (
       !isNaN(beginRate) &&
@@ -170,21 +173,20 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
 export const updateLsdTokenUnbondingDuration =
   (): AppThunk => async (dispatch, getState) => {
     try {
-      const web3 = getWeb3();
-      const stakeManagerContract = new web3.eth.Contract(
-        getStakeManagerContractAbi(),
+      const cosmWasmClient = await getNeutronWasmClient();
+
+      const stakeManagerClient = new StakeManager.Client(
+        cosmWasmClient,
         getStakeManagerContract()
       );
+      const poolInfo = await stakeManagerClient.queryPoolInfo({
+        pool_addr: getPoolAddress(),
+      });
 
-      const unbondingDuration = await stakeManagerContract.methods
-        .unbondingDuration()
-        .call();
-      const eraSeconds = await stakeManagerContract.methods.eraSeconds().call();
-      if (!eraSeconds) return;
-
-      dispatch(
-        setUnbondingDuration(Number(unbondingDuration) * Number(eraSeconds))
-      );
+      // console.log({ poolInfo });
+      const unbondingSeconds = poolInfo.unbonding_period * poolInfo.era_seconds;
+      // console.log({ unbondingSeconds });
+      dispatch(setUnbondingDuration(unbondingSeconds));
     } catch (err: any) {
       console.log(err);
     }

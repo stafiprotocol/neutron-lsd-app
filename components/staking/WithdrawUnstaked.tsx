@@ -1,24 +1,15 @@
-import { CustomButton } from "../common/CustomButton";
+import { lsdTokenChainConfig, neutronChainConfig } from "config/chain";
 import { useAppDispatch, useAppSelector } from "hooks/common";
+import { useCosmosChainAccount } from "hooks/useCosmosChainAccount";
+import { ChainConfig } from "interfaces/common";
+import { useMemo } from "react";
+import { WithdrawInfo, handleTokenWithdraw } from "redux/reducers/TokenSlice";
+import { connectKeplrAccount } from "redux/reducers/WalletSlice";
 import { RootState } from "redux/store";
-import { formatNumber } from "utils/numberUtils";
-import { useEffect, useMemo } from "react";
-import {
-  handleTokenWithdraw,
-  updateWithdrawRelayFee,
-  WithdrawInfo,
-} from "redux/reducers/TokenSlice";
-import { useContractWrite } from "wagmi";
-import {
-  getStakeManagerContract,
-  getStakeManagerContractAbi,
-} from "config/contract";
-import { getEvmChainId } from "config/env";
-import { useRelayFee } from "hooks/useRelayFee";
-import snackbarUtil from "utils/snackbarUtils";
-import { NETWORK_ERR_MESSAGE } from "constants/common";
-import { getTokenName, needRelayFee } from "utils/configUtils";
+import { getEstWithdrawFee, getTokenName } from "utils/configUtils";
+import { amountToChain, formatNumber } from "utils/numberUtils";
 import { formatWithdrawRemaingTime } from "utils/timeUtils";
+import { CustomButton } from "../common/CustomButton";
 
 interface Props {
   withdrawInfo: WithdrawInfo;
@@ -32,44 +23,85 @@ export const WithdrawUnstaked = (props: Props) => {
     return { withdrawLoading: state.app.withdrawLoading };
   });
 
-  const { relayFee } = useRelayFee();
-
-  const { writeAsync } = useContractWrite({
-    address: getStakeManagerContract() as `0x${string}`,
-    abi: getStakeManagerContractAbi(),
-    functionName: "withdraw",
-    args: [],
-    chainId: getEvmChainId(),
-  });
+  const neutronAccount = useCosmosChainAccount(neutronChainConfig.chainId);
+  const lsdTokenAccount = useCosmosChainAccount(lsdTokenChainConfig.chainId);
 
   const withdrawDisabled = useMemo(() => {
     return (
       isNaN(Number(withdrawInfo.avaiableWithdraw)) ||
       Number(withdrawInfo.avaiableWithdraw) <= 0 ||
+      !withdrawInfo.neutronUnstakeIndexList ||
+      withdrawInfo.neutronUnstakeIndexList.length === 0 ||
       withdrawLoading
     );
   }, [withdrawInfo, withdrawLoading]);
 
-  const clickWithdraw = () => {
+  const walletNotConnected = useMemo(() => {
+    if (!lsdTokenAccount || !neutronAccount) {
+      return true;
+    }
+    return false;
+  }, [lsdTokenAccount, neutronAccount]);
+
+  const noEnoughNtrnFee = useMemo(() => {
+    const ntrnBalance = neutronAccount?.allBalances?.find(
+      (item) => item.denom === neutronChainConfig.denom
+    );
+    // console.log({ ntrnBalance });
+
+    if (
+      !ntrnBalance ||
+      Number(ntrnBalance.amount) <
+        Number(amountToChain(getEstWithdrawFee() + ""))
+    ) {
+      return true;
+    }
+
+    return false;
+  }, [neutronAccount]);
+
+  const [buttonText, buttonDisabled, isButtonSecondary] = useMemo(() => {
     if (withdrawDisabled) {
+      return ["Withdraw", withdrawDisabled, false];
+    }
+    if (walletNotConnected) {
+      return ["Connect Wallet", false, true];
+    }
+    if (noEnoughNtrnFee) {
+      return ["Insufficient NTRN Fee", true, false];
+    }
+    return ["Withdraw", withdrawDisabled, false];
+  }, [walletNotConnected, withdrawDisabled, noEnoughNtrnFee]);
+
+  const clickWithdraw = () => {
+    if (walletNotConnected) {
+      const connectChainConfigs: ChainConfig[] = [];
+      if (!neutronAccount) {
+        connectChainConfigs.push(neutronChainConfig);
+      }
+      if (!lsdTokenAccount) {
+        connectChainConfigs.push(lsdTokenChainConfig);
+      }
+      dispatch(connectKeplrAccount(connectChainConfigs));
       return;
     }
-    if (needRelayFee() && isNaN(Number(relayFee.withdraw))) {
-      snackbarUtil.error(NETWORK_ERR_MESSAGE);
+
+    if (
+      withdrawDisabled ||
+      !withdrawInfo.neutronUnstakeIndexList ||
+      !withdrawInfo.avaiableWithdraw ||
+      !lsdTokenAccount
+    ) {
       return;
     }
     dispatch(
       handleTokenWithdraw(
-        writeAsync,
-        relayFee.withdraw + "",
-        withdrawInfo.avaiableWithdraw + ""
+        withdrawInfo.neutronUnstakeIndexList,
+        withdrawInfo.avaiableWithdraw,
+        lsdTokenAccount?.bech32Address
       )
     );
   };
-
-  useEffect(() => {
-    dispatch(updateWithdrawRelayFee());
-  }, [dispatch]);
 
   return (
     <div className="mt-[.18rem] bg-color-bg2 rounded-[.3rem] border-color-border1 border-[.01rem]">
@@ -105,16 +137,16 @@ export const WithdrawUnstaked = (props: Props) => {
 
       <div className="mt-[.24rem] mx-[.24rem] mb-[.32rem]">
         <CustomButton
-          type="primary"
+          type={isButtonSecondary ? "secondary" : "primary"}
           height=".56rem"
-          disabled={withdrawDisabled}
+          disabled={buttonDisabled}
           loading={withdrawLoading}
           border="none"
           onClick={() => {
             clickWithdraw();
           }}
         >
-          Withdraw
+          {buttonText}
         </CustomButton>
       </div>
     </div>

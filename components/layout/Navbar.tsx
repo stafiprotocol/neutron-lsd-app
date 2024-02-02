@@ -4,10 +4,11 @@ import { CustomButton } from "components/common/CustomButton";
 import { NoticeDrawer } from "components/drawer/NoticeDrawer";
 import { SettingsDrawer } from "components/drawer/SettingsDrawer";
 import { Icomoon } from "components/icon/Icomoon";
+import { lsdTokenChainConfig, neutronChainConfig } from "config/chain";
 import { useAppDispatch, useAppSelector } from "hooks/common";
 import { useAppSlice } from "hooks/selector";
-import { useWalletAccount } from "hooks/useWalletAccount";
-import noticeIcon from "public/images/notice.png";
+import { useCosmosChainAccount } from "hooks/useCosmosChainAccount";
+import { ChainConfig } from "interfaces/common";
 import {
   bindPopover,
   bindTrigger,
@@ -16,14 +17,16 @@ import {
 import Image from "next/image";
 import auditIcon from "public/images/audit.svg";
 import defaultAvatar from "public/images/default_avatar.png";
+import noticeIcon from "public/images/notice.png";
 import { useEffect, useMemo, useState } from "react";
-import { connectMetaMask, disconnectWallet } from "redux/reducers/WalletSlice";
+import {
+  connectKeplrAccount,
+  disconnectWallet,
+} from "redux/reducers/WalletSlice";
 import { RootState } from "redux/store";
-import { getShortAddress } from "utils/stringUtils";
-import { getEvmChainId } from "config/env";
 import { getAuditList, getTokenChainName } from "utils/configUtils";
 import { getChainIcon } from "utils/iconUtils";
-import { useConnect } from "wagmi";
+import { getShortAddress } from "utils/stringUtils";
 
 const Navbar = () => {
   const { unreadNoticeFlag } = useAppSlice();
@@ -34,7 +37,8 @@ const Navbar = () => {
   const [pageWidth, setPageWidth] = useState(
     document.documentElement.clientWidth
   );
-  const { metaMaskAccount } = useWalletAccount();
+  const neutronAccount = useCosmosChainAccount(neutronChainConfig.chainId);
+  const lsdTokenAccount = useCosmosChainAccount(lsdTokenChainConfig.chainId);
 
   const resizeListener = () => {
     const clientW = document.documentElement.clientWidth;
@@ -66,7 +70,7 @@ const Navbar = () => {
 
         <div className={classNames("flex items-center")}>
           <div className={classNames("ml-[.16rem]")}>
-            {metaMaskAccount ? (
+            {neutronAccount && lsdTokenAccount ? (
               <UserInfo auditExpand={auditExpand} />
             ) : (
               <ConnectButton />
@@ -123,7 +127,7 @@ const Navbar = () => {
 const UserInfo = (props: { auditExpand: boolean }) => {
   const { auditExpand } = props;
   const dispatch = useAppDispatch();
-  const { metaMaskAccount } = useWalletAccount();
+  const neutronAccount = useCosmosChainAccount(neutronChainConfig.chainId);
   const { darkMode } = useAppSelector((state: RootState) => {
     return {
       darkMode: state.app.darkMode,
@@ -197,7 +201,7 @@ const UserInfo = (props: { auditExpand: boolean }) => {
               addressPopupState.isOpen ? "text-text1 " : "text-color-text1"
             )}
           >
-            {getShortAddress(metaMaskAccount, 5)}
+            {getShortAddress(neutronAccount?.bech32Address, 5)}
           </div>
         )}
       </div>
@@ -238,9 +242,11 @@ const UserInfo = (props: { auditExpand: boolean }) => {
           <div
             className="cursor-pointer flex items-center justify-between"
             onClick={() => {
-              navigator.clipboard.writeText(metaMaskAccount || "").then(() => {
-                addressPopupState.close();
-              });
+              navigator.clipboard
+                .writeText(neutronAccount?.bech32Address || "")
+                .then(() => {
+                  addressPopupState.close();
+                });
             }}
           >
             <div className="flex items-center">
@@ -256,7 +262,7 @@ const UserInfo = (props: { auditExpand: boolean }) => {
             className="cursor-pointer flex items-center justify-between"
             onClick={() => {
               addressPopupState.close();
-              dispatch(disconnectWallet());
+              dispatch(disconnectWallet(neutronChainConfig.chainId));
             }}
           >
             <div className="ml-[.12rem] text-color-text1 text-[.16rem]">
@@ -270,21 +276,19 @@ const UserInfo = (props: { auditExpand: boolean }) => {
 };
 
 const ConnectButton = () => {
-  const { metaMaskAccount } = useWalletAccount();
-
-  const { connectAsync, connectors } = useConnect();
+  const dispatch = useAppDispatch();
+  const neutronAccount = useCosmosChainAccount(neutronChainConfig.chainId);
+  const lsdTokenAccount = useCosmosChainAccount(lsdTokenChainConfig.chainId);
 
   const clickConnectWallet = async () => {
-    const metamaskConnector = connectors.find(
-      (item) => item.name === "MetaMask"
-    );
-    // todo: install metamask
-    if (!metamaskConnector) return;
-    if (!metaMaskAccount) {
-      await connectAsync({ connector: metamaskConnector }).catch((err) =>
-        console.log(err)
-      );
+    const connectChainConfigs: ChainConfig[] = [];
+    if (!neutronAccount) {
+      connectChainConfigs.push(neutronChainConfig);
     }
+    if (!lsdTokenAccount) {
+      connectChainConfigs.push(lsdTokenChainConfig);
+    }
+    dispatch(connectKeplrAccount(connectChainConfigs));
   };
 
   return (
@@ -310,13 +314,14 @@ interface AuditComponentProps {
 const AuditComponent = (props: AuditComponentProps) => {
   const { expand, onExpandChange } = props;
   const { darkMode } = useAppSlice();
-  const { metaMaskAccount } = useWalletAccount();
+  const neutronAccount = useCosmosChainAccount(neutronChainConfig.chainId);
+  const lsdTokenAccount = useCosmosChainAccount(lsdTokenChainConfig.chainId);
 
   useEffect(() => {
-    if (metaMaskAccount) {
+    if (neutronAccount && lsdTokenAccount) {
       onExpandChange(false);
     }
-  }, [metaMaskAccount, onExpandChange]);
+  }, [neutronAccount, lsdTokenAccount, onExpandChange]);
 
   return (
     <div

@@ -1,53 +1,52 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import {
+  ExecuteInstruction,
+  SigningCosmWasmClient,
+} from "@cosmjs/cosmwasm-stargate";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import {
+  getOfflineSigner,
+  queryAccountBalances,
+  sendIBCTransferTx,
+} from "@stafihub/apps-wallet";
+import { LsdToken, StakeManager } from "codegen/neutron";
+import { lsdTokenChainConfig, neutronChainConfig } from "config/chain";
 import {
   getLsdTokenContract,
-  getLsdTokenContractAbi,
+  getPoolAddress,
   getStakeManagerContract,
-  getStakeManagerContractAbi,
 } from "config/contract";
 import { getExplorerTxUrl } from "config/explorer";
-import { AppThunk } from "redux/store";
-import { isMetaMaskCancelError, timeout, uuid } from "utils/commonUtils";
 import {
-  BLOCK_HASH_NOT_FOUND_MESSAGE,
   CANCELLED_MESSAGE,
-  CONNECTION_ERROR_MESSAGE,
-  LOADING_MESSAGE_UNSTAKING,
-  LOADING_MESSAGE_WITHDRAWING,
   TRANSACTION_FAILED_MESSAGE,
 } from "constants/common";
+import { CosmosAccountMap } from "interfaces/common";
+import { AppThunk } from "redux/store";
+import { isKeplrCancelError, timeout, uuid } from "utils/commonUtils";
+import { getTokenName } from "utils/configUtils";
+import { getCosmosTxErrorMsg, getNeutronWasmClient } from "utils/cosmosUtils";
 import { LocalNotice } from "utils/noticeUtils";
-import { formatNumber, stakeAmountToBn } from "utils/numberUtils";
+import { amountToChain, chainAmountToHuman } from "utils/numberUtils";
 import snackbarUtil from "utils/snackbarUtils";
 import {
-  createWeb3,
-  fetchTransactionReceipt,
-  getMetaMaskTxErrorMsg,
-  getWeb3,
-} from "utils/web3Utils";
-import Web3 from "web3";
-import {
   addNotice,
-  setStakeLoadingParams,
-  setUnstakeLoadingParams,
   setStakeLoading,
+  setStakeLoadingParams,
   setUnstakeLoading,
+  setUnstakeLoadingParams,
   setWithdrawLoading,
   setWithdrawLoadingParams,
   updateStakeLoadingParams,
-  updateWithdrawLoadingParams,
   updateUnstakeLoadingParams,
+  updateWithdrawLoadingParams,
 } from "./AppSlice";
-import { getLsdTokenName, getTokenName } from "utils/configUtils";
-import BN from "bn.js";
-import { fromWei, toWei } from "web3-utils";
-import { viemClient } from "connectors/walletConnect";
-import { parseEther } from "viem";
+import { updateCosmosAccounts } from "./WalletSlice";
 
 export interface WithdrawInfo {
   overallAmount: string | undefined;
   avaiableWithdraw: string | undefined;
   remainingTime: number | undefined;
+  neutronUnstakeIndexList?: number[];
 }
 
 export interface RelayFee {
@@ -63,6 +62,7 @@ export interface TokenState {
   withdrawInfo: WithdrawInfo;
   relayFee: RelayFee;
   tokenPrice: number | undefined;
+  ntrnPrice: number | undefined;
 }
 
 const initialState: TokenState = {
@@ -80,6 +80,7 @@ const initialState: TokenState = {
     withdraw: undefined,
   },
   tokenPrice: undefined,
+  ntrnPrice: undefined,
 };
 
 export const tokenSlice = createSlice({
@@ -116,6 +117,9 @@ export const tokenSlice = createSlice({
     setTokenPrice: (state: TokenState, action: PayloadAction<number>) => {
       state.tokenPrice = action.payload;
     },
+    setNtrnPrice: (state: TokenState, action: PayloadAction<number>) => {
+      state.ntrnPrice = action.payload;
+    },
   },
 });
 
@@ -126,28 +130,132 @@ export const {
   setWithdrawInfo,
   setRelayFee,
   setTokenPrice,
+  setNtrnPrice,
 } = tokenSlice.actions;
 
 export default tokenSlice.reducer;
 
 /**
- * update evm token balance
+ * update cosmos token balances
  */
-export const updateTokenBalance =
+export const updateCosmosTokenBalances =
   (): AppThunk => async (dispatch, getState) => {
-    const metaMaskAccount = getState().wallet.metaMaskAccount;
-    if (!metaMaskAccount) {
-      dispatch(setTokenBalance(undefined));
+    // console.log("updateCosmosTokenBalances");
+    const chainConfigs = [neutronChainConfig, lsdTokenChainConfig];
+
+    const requests = chainConfigs.map((chainConfig) => {
+      return (async () => {
+        try {
+          const account = getState().wallet.cosmosAccounts[chainConfig.chainId];
+          if (!account) {
+            return;
+          }
+          const newAccount = { ...account };
+          const userAddress = newAccount.bech32Address;
+
+          const balances = await queryAccountBalances(chainConfig, userAddress);
+          newAccount.allBalances = balances;
+
+          // Prevent disconnect conflict.
+          if (
+            !getState().wallet.cosmosAccounts[chainConfig.chainId] ||
+            getState().wallet.cosmosAccounts[chainConfig.chainId]
+              ?.bech32Address !== userAddress
+          ) {
+            return;
+          }
+          return { network: chainConfig.chainId, account: newAccount };
+        } catch (err: unknown) {
+          // console.log(`updateTokenBalance ${chainId} error`, err);
+          return null;
+        }
+      })();
+    });
+
+    const results = await Promise.all(requests);
+
+    const accountsMap: CosmosAccountMap = {};
+    results.forEach((result) => {
+      if (result) {
+        accountsMap[result.network] = result.account;
+      }
+    });
+    dispatch(updateCosmosAccounts(accountsMap));
+  };
+
+/**
+ * update user withdraw info
+ */
+export const updateLsdTokenUserWithdrawInfo =
+  (): AppThunk => async (dispatch, getState) => {
+    const neutronAccount =
+      getState().wallet.cosmosAccounts[neutronChainConfig.chainId];
+    if (!neutronAccount) {
+      dispatch(
+        setWithdrawInfo({
+          overallAmount: undefined,
+          avaiableWithdraw: undefined,
+          remainingTime: undefined,
+        })
+      );
       return;
     }
 
-    let web3 = getWeb3();
     try {
-      const balance = await web3.eth.getBalance(metaMaskAccount);
-      dispatch(
-        setTokenBalance(Web3.utils.fromWei(balance.toString(), "ether"))
+      const cosmWasmClient = await getNeutronWasmClient();
+      const stakeManagerClient = new StakeManager.Client(
+        cosmWasmClient,
+        getStakeManagerContract()
       );
-    } catch (err: unknown) {}
+
+      const poolInfo = await stakeManagerClient.queryPoolInfo({
+        pool_addr: getPoolAddress(),
+      });
+
+      const userUnstakeList = await stakeManagerClient.queryUserUnstake({
+        pool_addr: getPoolAddress(),
+        user_neutron_addr: neutronAccount.bech32Address,
+      });
+      // console.log({ userUnstakeList });
+
+      // console.log({ poolInfo });
+      // console.log({ rate });
+
+      let overallAmount = 0;
+      let withdrawableAmount = 0;
+      let remainingUnlockEra = 0;
+      const unstakeIndexList: number[] = [];
+      userUnstakeList.forEach((item) => {
+        const willReceiveTokenAmount = Number(item.amount);
+        overallAmount += willReceiveTokenAmount;
+        if (item.era + poolInfo.unbonding_period <= poolInfo.era) {
+          withdrawableAmount += willReceiveTokenAmount;
+          unstakeIndexList.push(item.index);
+        } else {
+          const itemRemainingUnlockEra =
+            item.era + poolInfo.unbonding_period - poolInfo.era;
+          if (remainingUnlockEra === 0) {
+            remainingUnlockEra = itemRemainingUnlockEra;
+          } else {
+            remainingUnlockEra = Math.min(
+              remainingUnlockEra,
+              itemRemainingUnlockEra
+            );
+          }
+        }
+      });
+
+      dispatch(
+        setWithdrawInfo({
+          avaiableWithdraw: chainAmountToHuman(withdrawableAmount),
+          overallAmount: chainAmountToHuman(overallAmount),
+          remainingTime: remainingUnlockEra * poolInfo.era_seconds * 1000,
+          neutronUnstakeIndexList: unstakeIndexList,
+        })
+      );
+    } catch (err: any) {
+      console.log({ err });
+    }
   };
 
 /**
@@ -155,25 +263,29 @@ export const updateTokenBalance =
  * @param stakeAmount stake token amount
  * @param willReceiveAmount will receive lsdToken amount
  * @param newLsdTokenBalance new lsdToken balance after staking
- * @param relayFee stake relay fee
  * @param isReTry is retry staking
  * @param cb callback function
  */
 export const handleTokenStake =
   (
-    writeAsync: any,
     stakeAmount: string,
     willReceiveAmount: string,
-    newLsdTokenBalance: string,
-    relayFee: string,
     isReTry: boolean,
     cb?: (success: boolean) => void
   ): AppThunk =>
   async (dispatch, getState) => {
-    if (!writeAsync) return;
-
-    const metaMaskAccount = getState().wallet.metaMaskAccount;
-    if (!metaMaskAccount) return;
+    const sender =
+      getState().wallet.cosmosAccounts[lsdTokenChainConfig.chainId];
+    const neutronAccount =
+      getState().wallet.cosmosAccounts[neutronChainConfig.chainId];
+    if (!neutronAccount || !sender) {
+      snackbarUtil.error("Please connect Chain Account first");
+      return;
+    }
+    if (!lsdTokenChainConfig.stakeIbcChannel) {
+      snackbarUtil.error("Please config Ibc channel");
+      return;
+    }
 
     const noticeUuid = isReTry
       ? getState().app.stakeLoadingParams?.noticeUuid
@@ -187,72 +299,90 @@ export const handleTokenStake =
           status: "loading",
           amount: Number(stakeAmount) + "",
           willReceiveAmount,
-          newLsdTokenBalance,
-          relayFee,
-          customMsg: `Please confirm the ${stakeAmount} ${getTokenName()} staking transaction in your MetaMask wallet`,
+          newLsdTokenBalance: "",
+          customMsg: `Please confirm the ${stakeAmount} ${getTokenName()} staking transaction in your wallet`,
         })
       );
 
-      // const web3 = getWeb3();
+      const chainAmount = amountToChain(stakeAmount);
 
-      const msgValue = stakeAmountToBn(stakeAmount).add(
-        stakeAmountToBn(relayFee)
-      );
-      const amount = toWei(stakeAmount, "ether");
-
-      // let contract = new web3.eth.Contract(
-      //   getStakeManagerContractAbi(),
-      //   getStakeManagerContract(),
-      //   {
-      //     from: metaMaskAccount,
-      //   }
-      // );
-
-      // const result = await contract.methods
-      //   .stake(amount)
-      //   .send({ value: msgValue.toString() });
-
-      const result = await writeAsync({
-        function: "stake",
-        args: [amount],
-        from: metaMaskAccount,
-        value: msgValue.toString(),
+      const memo = JSON.stringify({
+        wasm: {
+          contract: getStakeManagerContract(),
+          msg: {
+            stake: {
+              neutron_address: neutronAccount.bech32Address,
+              pool_addr: getPoolAddress(),
+            },
+          },
+        },
       });
-      // @ts-ignore
-      const txReceipt = await fetchTransactionReceipt(viemClient, result.hash);
 
-      if (
-        !txReceipt ||
-        txReceipt.status !== "success" ||
-        !txReceipt.blockHash
-      ) {
-        throw new Error(getMetaMaskTxErrorMsg(txReceipt));
+      const cosmWasmClient = await getNeutronWasmClient();
+
+      const lsdTokenClient = new LsdToken.Client(
+        cosmWasmClient,
+        getLsdTokenContract()
+      );
+
+      const userOldBalanceInChain = await lsdTokenClient.queryBalance({
+        address: neutronAccount.bech32Address,
+      });
+      const oldLsdBalance = chainAmountToHuman(userOldBalanceInChain.balance);
+
+      const response = await sendIBCTransferTx(
+        lsdTokenChainConfig,
+        sender.bech32Address,
+        getStakeManagerContract(),
+        chainAmount,
+        "transfer",
+        lsdTokenChainConfig.stakeIbcChannel,
+        lsdTokenChainConfig.denom,
+        memo,
+        true
+      );
+
+      if (!response || response.code !== 0) {
+        throw new Error(getCosmosTxErrorMsg(response));
       }
 
-      const blockHash = txReceipt.blockHash;
-      if (!blockHash) {
-        throw new Error(BLOCK_HASH_NOT_FOUND_MESSAGE);
+      let newLsdBalance;
+      let count = 0;
+      while (true) {
+        await timeout(3000);
+        count++;
+        const userNewBalanceInChain = await lsdTokenClient.queryBalance({
+          address: neutronAccount.bech32Address,
+        });
+        newLsdBalance = chainAmountToHuman(userNewBalanceInChain.balance);
+        if (newLsdBalance > oldLsdBalance || count > 20) {
+          break;
+        }
       }
 
-      const txHash = txReceipt.transactionHash;
+      const txHash = response.transactionHash;
       dispatch(
         updateStakeLoadingParams(
           {
             status: "success",
             txHash: txHash,
-            scanUrl: getExplorerTxUrl(txHash),
+            scanUrl: getExplorerTxUrl(txHash, lsdTokenChainConfig.chainId),
             customMsg: undefined,
+            newLsdTokenBalance: newLsdBalance,
           },
           (newParams) => {
             const newNotice: LocalNotice = {
               id: noticeUuid || uuid(),
               type: "Stake",
-              txDetail: { transactionHash: txHash, sender: metaMaskAccount },
+              txDetail: {
+                transactionHash: txHash,
+                sender: sender.bech32Address,
+              },
               data: {
                 amount: Number(stakeAmount) + "",
                 willReceiveAmount: Number(willReceiveAmount) + "",
               },
-              scanUrl: getExplorerTxUrl(txHash),
+              scanUrl: getExplorerTxUrl(txHash, lsdTokenChainConfig.chainId),
               status: "Confirmed",
               stakeLoadingParams: newParams,
             };
@@ -265,10 +395,8 @@ export const handleTokenStake =
     } catch (err: any) {
       cb && cb(false);
       dispatch(setStakeLoading(false));
-      let displayMsg = TRANSACTION_FAILED_MESSAGE;
-      if (err.code === -32603) {
-        displayMsg = CONNECTION_ERROR_MESSAGE;
-      } else if (isMetaMaskCancelError(err)) {
+      let displayMsg = err.message || TRANSACTION_FAILED_MESSAGE;
+      if (isKeplrCancelError(err)) {
         snackbarUtil.error(CANCELLED_MESSAGE);
         dispatch(setStakeLoadingParams(undefined));
         return;
@@ -296,7 +424,7 @@ export const handleTokenStake =
         )
       );
     } finally {
-      dispatch(updateTokenBalance());
+      dispatch(updateCosmosTokenBalances());
     }
   };
 
@@ -304,160 +432,139 @@ export const handleTokenStake =
  * unstake lsdToken
  * @param unstakeAmount unstake lsdToken amount
  * @param willReceiveAmount will receive token amount
- * @param newLsdTokenBalance new lsdToken balance after unstaking
  * @param isReTry is retry unstaking
  * @param cb callback function
  */
 export const handleLsdTokenUnstake =
   (
-    approveWriteAsync: any,
-    unstakeWriteAsync: any,
     unstakeAmount: string,
+    receiver: string | undefined,
     willReceiveAmount: string,
-    newLsdTokenBalance: string,
-    relayFee: string,
     isReTry: boolean,
     cb?: (success: boolean) => void
   ): AppThunk =>
   async (dispatch, getState) => {
-    if (!approveWriteAsync || !unstakeWriteAsync) {
+    const neutronAccount =
+      getState().wallet.cosmosAccounts[neutronChainConfig.chainId];
+    const offlineSigner = await getOfflineSigner(neutronChainConfig.chainId);
+
+    if (!neutronAccount || !offlineSigner || !receiver) {
+      snackbarUtil.error("Please connect wallet account first");
+      dispatch(setStakeLoading(false));
       return;
     }
 
-    const metaMaskAccount = getState().wallet.metaMaskAccount;
-    if (!metaMaskAccount) return;
-
+    dispatch(setUnstakeLoading(true));
     const noticeUuid = isReTry
       ? getState().app.unstakeLoadingParams?.noticeUuid
       : uuid();
-
-    dispatch(setUnstakeLoading(true));
+    const amountInChain = amountToChain(unstakeAmount);
 
     try {
-      // const web3 = createWeb3();
       dispatch(
         setUnstakeLoadingParams({
           modalVisible: true,
           status: "loading",
-          targetAddress: metaMaskAccount,
+          targetAddress: receiver,
           amount: unstakeAmount,
           willReceiveAmount,
-          newLsdTokenBalance,
-          relayFee,
         })
       );
 
-      const stakeManagerContractAddr = getStakeManagerContract();
-      // const lsdTokenContract = new web3.eth.Contract(
-      //   getLsdTokenContractAbi(),
-      //   getLsdTokenContract(),
-      //   {
-      //     from: metaMaskAccount,
-      //   }
-      // );
-      const allowanceResult = await viemClient.readContract({
-        address: getLsdTokenContract() as `0x${string}`,
-        abi: getLsdTokenContractAbi(),
-        functionName: "allowance",
-        args: [metaMaskAccount, stakeManagerContractAddr],
-      });
+      const fee = {
+        amount: [
+          {
+            denom: "untrn",
+            amount: "1",
+          },
+        ],
+        gas: "1000000",
+      };
 
-      // const allowanceResult = await lsdTokenContract.methods
-      //   .allowance(metaMaskAccount, stakeManagerContractAddr)
-      //   .call();
-      // let allowance = web3.utils.fromWei(allowanceResult);
-      let allowance = fromWei(allowanceResult + "");
-
-      // const contract = new web3.eth.Contract(
-      //   getStakeManagerContractAbi(),
-      //   stakeManagerContractAddr,
-      //   {
-      //     from: metaMaskAccount,
-      //   }
-      // );
-
-      if (Number(allowance) < Number(unstakeAmount)) {
-        allowance = toWei("1000000");
-        // const approveResult = await lsdTokenContract.methods
-        //   .approve(stakeManagerContractAddr, allowance)
-        //   .send({ from: metaMaskAccount });
-        // if (!approveResult || !approveResult.status) {
-        //   //
-        // }
-        const approveResult = await approveWriteAsync({
-          args: [stakeManagerContractAddr, allowance],
-          from: metaMaskAccount,
-        });
-        const approveTxReceipt = await fetchTransactionReceipt(
-          // @ts-ignore
-          viemClient,
-          approveResult.hash
+      const signingCosmWasmClient =
+        await SigningCosmWasmClient.connectWithSigner(
+          neutronChainConfig.restEndpoint,
+          offlineSigner
         );
 
-        if (!approveTxReceipt || approveTxReceipt.status !== "success") {
-          throw new Error(getMetaMaskTxErrorMsg(approveTxReceipt));
-        }
-        await timeout(5000);
+      const instructions: ExecuteInstruction[] = [];
+
+      const lsdTokenClient = new LsdToken.Client(
+        signingCosmWasmClient,
+        getLsdTokenContract()
+      );
+      const allowance = await lsdTokenClient.queryAllowance({
+        owner: neutronAccount.bech32Address,
+        spender: getStakeManagerContract(),
+      });
+      // console.log({ allowance });
+
+      if (Number(allowance.allowance) < Number(amountInChain)) {
+        instructions.push({
+          contractAddress: getLsdTokenContract(),
+          msg: {
+            increase_allowance: {
+              spender: getStakeManagerContract(),
+              amount: Number(amountInChain) - Number(allowance.allowance) + "",
+            },
+          },
+        });
       }
 
-      const amount = toWei(unstakeAmount, "ether");
-      const msgValue = stakeAmountToBn(relayFee);
-      // const unstakeResult = await contract.methods
-      //   .unstake(amount)
-      //   .send({ value: msgValue.toString(), gas: "0x54647" });
-      const unstakeResult = await unstakeWriteAsync({
-        args: [amount],
-        from: metaMaskAccount,
-        value: parseEther(relayFee as `${number}`, "wei"),
-        gas: Number("0x54647"),
+      instructions.push({
+        contractAddress: getStakeManagerContract(),
+        msg: {
+          unstake: {
+            amount: amountInChain + "",
+            pool_addr: getPoolAddress(),
+          },
+        },
       });
-      const unstakeTxReceipt = await fetchTransactionReceipt(
-        // @ts-ignore
-        viemClient,
-        unstakeResult.hash
+
+      const executeResult = await signingCosmWasmClient.executeMultiple(
+        neutronAccount.bech32Address,
+        instructions,
+        fee
       );
 
-      if (
-        !unstakeTxReceipt ||
-        unstakeTxReceipt.status !== "success" ||
-        !unstakeTxReceipt.blockHash
-      ) {
-        throw new Error(getMetaMaskTxErrorMsg(unstakeTxReceipt));
+      if (!executeResult?.transactionHash) {
+        throw new Error(getCosmosTxErrorMsg(executeResult));
       }
 
-      const blockHash = unstakeTxReceipt.blockHash;
-      if (!blockHash) {
-        throw new Error(BLOCK_HASH_NOT_FOUND_MESSAGE);
-      }
+      const userBalanceInChain = await lsdTokenClient.queryBalance({
+        address: neutronAccount.bech32Address,
+      });
+      const newLsdTokenBalance = chainAmountToHuman(userBalanceInChain.balance);
 
-      const txHash = unstakeTxReceipt.transactionHash;
+      const txHash = executeResult.transactionHash;
       dispatch(
         updateUnstakeLoadingParams({
           status: "success",
           txHash: txHash,
-          scanUrl: getExplorerTxUrl(txHash),
+          scanUrl: getExplorerTxUrl(txHash, neutronChainConfig.chainId),
+          newLsdTokenBalance: newLsdTokenBalance,
         })
       );
       const newNotice: LocalNotice = {
         id: noticeUuid || uuid(),
         type: "Unstake",
-        txDetail: { transactionHash: txHash, sender: metaMaskAccount },
+        txDetail: {
+          transactionHash: txHash,
+          sender: neutronAccount.bech32Address,
+        },
         data: {
           amount: Number(unstakeAmount) + "",
           willReceiveAmount: Number(willReceiveAmount) + "",
         },
-        scanUrl: getExplorerTxUrl(unstakeResult.transactionHash),
+        scanUrl: getExplorerTxUrl(txHash, neutronChainConfig.chainId),
         status: "Confirmed",
       };
       dispatch(addNotice(newNotice));
       dispatch(setUnstakeLoading(false));
     } catch (err: any) {
       dispatch(setUnstakeLoading(false));
-      // snackbarUtil.error(err.message);
       let displayMsg = err.message || TRANSACTION_FAILED_MESSAGE;
-      if (err.code === -32603) {
-        displayMsg = CONNECTION_ERROR_MESSAGE;
-      } else if (isMetaMaskCancelError(err)) {
+      if (isKeplrCancelError(err)) {
         snackbarUtil.error(CANCELLED_MESSAGE);
         dispatch(setUnstakeLoadingParams(undefined));
         return;
@@ -465,11 +572,11 @@ export const handleLsdTokenUnstake =
       dispatch(
         updateUnstakeLoadingParams({
           status: "error",
-          customMsg: displayMsg || "Unstake failed",
+          customMsg: displayMsg,
         })
       );
     } finally {
-      dispatch(updateTokenBalance());
+      dispatch(updateCosmosTokenBalances());
     }
   };
 
@@ -479,90 +586,22 @@ interface LsdTokenUnstakeInfo {
 }
 
 /**
- * update user withdraw info
- */
-export const updateLsdTokenUserWithdrawInfo =
-  (): AppThunk => async (dispatch, getState) => {
-    const metaMaskAccount = getState().wallet.metaMaskAccount;
-    if (!metaMaskAccount) return;
-
-    const unbondingDuration = getState().lsdToken.unbondingDuration;
-    if (!unbondingDuration) {
-      return;
-    }
-
-    try {
-      const web3 = getWeb3();
-      const stakeManagerContract = new web3.eth.Contract(
-        getStakeManagerContractAbi(),
-        getStakeManagerContract(),
-        { from: metaMaskAccount }
-      );
-
-      const eraSeconds = await stakeManagerContract.methods.eraSeconds().call();
-
-      const unstakeIndexList = await stakeManagerContract.methods
-        .getUnstakeIndexListOf(metaMaskAccount)
-        .call();
-      // console.log(unstakeIndexList);
-      if (!Array.isArray(unstakeIndexList)) {
-        // console.log("unstake index list error");
-        return;
-      }
-      let avaiableWithdrawAmount: BN = new BN(0);
-      let overallWithdrawAmount: BN = new BN(0);
-
-      const currentEra = await stakeManagerContract.methods.currentEra().call();
-      let remainingEra = 0;
-
-      for (let i = 0; i < unstakeIndexList.length; i++) {
-        const unstakeInfo: LsdTokenUnstakeInfo =
-          await stakeManagerContract.methods
-            .unstakeAtIndex(unstakeIndexList[i])
-            .call();
-        overallWithdrawAmount = overallWithdrawAmount.add(
-          web3.utils.toBN(unstakeInfo.amount)
-        );
-        // console.log(unstakeInfo.era, unbondingDuration, currentEra);
-        if (
-          Number(unstakeInfo.era) +
-            Number(unbondingDuration) / Number(eraSeconds) >
-          Number(currentEra)
-        ) {
-          remainingEra = Math.max(
-            remainingEra,
-            Number(unstakeInfo.era) +
-              Number(unbondingDuration) / Number(eraSeconds) -
-              Number(currentEra)
-          );
-          continue;
-        }
-        avaiableWithdrawAmount = avaiableWithdrawAmount.add(
-          web3.utils.toBN(unstakeInfo.amount)
-        );
-      }
-
-      dispatch(
-        setWithdrawInfo({
-          avaiableWithdraw: web3.utils.fromWei(avaiableWithdrawAmount),
-          overallAmount: web3.utils.fromWei(overallWithdrawAmount),
-          remainingTime: remainingEra * Number(eraSeconds) * 1000,
-        })
-      );
-    } catch (err: any) {}
-  };
-
-/**
  * withdraw unstaked token
- * @param relayFee withdraw relay fee
- * @param amount withdraw amount
  */
 export const handleTokenWithdraw =
-  (writeAsync: any, relayFee: string, amount: string): AppThunk =>
+  (
+    unstakeIndexList: number[],
+    withdrawAmount: string,
+    receiver: string
+  ): AppThunk =>
   async (dispatch, getState) => {
-    if (!writeAsync) return;
-    const metaMaskAccount = getState().wallet.metaMaskAccount;
-    if (!metaMaskAccount) {
+    const neutronAccount =
+      getState().wallet.cosmosAccounts[neutronChainConfig.chainId];
+    const offlineSigner = await getOfflineSigner(neutronChainConfig.chainId);
+
+    if (!neutronAccount || !offlineSigner) {
+      snackbarUtil.error("Please connect Neutron Account first");
+      dispatch(setStakeLoading(false));
       return;
     }
 
@@ -572,50 +611,46 @@ export const handleTokenWithdraw =
         setWithdrawLoadingParams({
           modalVisible: true,
           status: "loading",
-          tokenAmount: amount,
-          relayFee,
+          tokenAmount: withdrawAmount,
         })
       );
 
-      // const web3 = createWeb3();
-      // const contract = new web3.eth.Contract(
-      //   getStakeManagerContractAbi(),
-      //   getStakeManagerContract(),
-      //   {
-      //     from: metaMaskAccount,
-      //   }
-      // );
-      const withdrawResult = await writeAsync({
-        args: [],
-        from: metaMaskAccount,
-        value: parseEther(relayFee as `${number}`, "wei"),
-      });
-      const withdrawTxReceipt = await fetchTransactionReceipt(
-        // @ts-ignore
-        viemClient,
-        withdrawResult.hash
+      const fee = {
+        amount: [
+          {
+            denom: "untrn",
+            amount: "1",
+          },
+        ],
+        gas: "1000000",
+      };
+
+      const signingCosmWasmClient =
+        await SigningCosmWasmClient.connectWithSigner(
+          neutronChainConfig.restEndpoint,
+          offlineSigner
+        );
+      const stakeManagerClient = new StakeManager.Client(
+        signingCosmWasmClient,
+        getStakeManagerContract()
       );
 
-      if (
-        !withdrawTxReceipt ||
-        withdrawTxReceipt.status !== "success" ||
-        !withdrawTxReceipt.blockHash
-      ) {
-        throw new Error(getMetaMaskTxErrorMsg(withdrawTxReceipt));
+      const executeResult = await stakeManagerClient.withdraw(
+        neutronAccount.bech32Address,
+        {
+          pool_addr: getPoolAddress(),
+          receiver,
+          unstake_index_list: unstakeIndexList,
+        },
+        fee
+      );
+
+      if (!executeResult?.transactionHash) {
+        throw new Error(getCosmosTxErrorMsg(executeResult));
       }
 
-      // const result = await contract.methods
-      //   .withdraw(claimableWithdrawals)
-      //   .send();
+      dispatch(updateLsdTokenUserWithdrawInfo());
 
-      // cb && cb(result.status, result);
-
-      const blockHash = withdrawTxReceipt.blockHash;
-      if (!blockHash) {
-        throw new Error(BLOCK_HASH_NOT_FOUND_MESSAGE);
-      }
-
-      const txHash = withdrawTxReceipt.transactionHash;
       dispatch(
         updateWithdrawLoadingParams(
           {
@@ -623,8 +658,11 @@ export const handleTokenWithdraw =
             broadcastStatus: "success",
             packStatus: "success",
             finalizeStatus: "success",
-            txHash: txHash,
-            scanUrl: getExplorerTxUrl(txHash),
+            txHash: executeResult.transactionHash,
+            scanUrl: getExplorerTxUrl(
+              executeResult.transactionHash,
+              neutronChainConfig.chainId
+            ),
             customMsg: undefined,
           },
           (newParams) => {
@@ -633,10 +671,13 @@ export const handleTokenWithdraw =
                 id: uuid(),
                 type: "Withdraw",
                 data: {
-                  tokenAmount: amount,
+                  tokenAmount: withdrawAmount,
                 },
                 status: "Confirmed",
-                scanUrl: getExplorerTxUrl(txHash),
+                scanUrl: getExplorerTxUrl(
+                  executeResult.transactionHash,
+                  neutronChainConfig.chainId
+                ),
               })
             );
           }
@@ -646,9 +687,7 @@ export const handleTokenWithdraw =
     } catch (err: any) {
       dispatch(setWithdrawLoading(false));
       let displayMsg = err.message || TRANSACTION_FAILED_MESSAGE;
-      if (err.code === -32603) {
-        displayMsg = CONNECTION_ERROR_MESSAGE;
-      } else if (isMetaMaskCancelError(err)) {
+      if (isKeplrCancelError(err)) {
         snackbarUtil.error(CANCELLED_MESSAGE);
         dispatch(setWithdrawLoadingParams(undefined));
         return;
@@ -656,90 +695,10 @@ export const handleTokenWithdraw =
       dispatch(
         updateWithdrawLoadingParams({
           status: "error",
-          customMsg: displayMsg || "Unstake failed",
+          customMsg: displayMsg,
         })
       );
     } finally {
-      dispatch(updateTokenBalance());
+      dispatch(updateCosmosTokenBalances());
     }
-  };
-
-/**
- * query staking relay fee from stake manager contract
- */
-export const updateStakeRelayFee =
-  (): AppThunk => async (dispatch, getState) => {
-    try {
-      const web3 = getWeb3();
-      const stakeManagerContract = new web3.eth.Contract(
-        getStakeManagerContractAbi(),
-        getStakeManagerContract()
-      );
-      let feeResult = await stakeManagerContract.methods
-        .getStakeRelayerFee()
-        .call();
-      feeResult = feeResult || "0";
-      const fee = web3.utils.fromWei(feeResult);
-      const relayFee = getState().token.relayFee;
-      dispatch(
-        setRelayFee({
-          ...relayFee,
-          stake: fee,
-        })
-      );
-    } catch (err: any) {}
-  };
-
-/**
- * query unstaking relay fee from stake manager contract
- */
-export const updateUnstakeRelayFee =
-  (): AppThunk => async (dispatch, getState) => {
-    try {
-      const web3 = getWeb3();
-      const stakeManagerContract = new web3.eth.Contract(
-        getStakeManagerContractAbi(),
-        getStakeManagerContract()
-      );
-      let feeResult = await stakeManagerContract.methods
-        .getUnstakeRelayerFee()
-        .call();
-      feeResult = feeResult || "0";
-      const fee = web3.utils.fromWei(feeResult);
-      // console.log({ fee });
-      const relayFee = getState().token.relayFee;
-      dispatch(
-        setRelayFee({
-          ...relayFee,
-          unstake: fee,
-        })
-      );
-    } catch (err: any) {}
-  };
-
-/**
- * query withdraw relay fee from stake manager contract
- */
-export const updateWithdrawRelayFee =
-  (): AppThunk => async (dispatch, getState) => {
-    try {
-      const web3 = getWeb3();
-      const stakeManagerContract = new web3.eth.Contract(
-        getStakeManagerContractAbi(),
-        getStakeManagerContract()
-      );
-      let feeResult = await stakeManagerContract.methods
-        .CROSS_DISTRIBUTE_RELAY_FEE()
-        .call();
-      feeResult = feeResult || "0";
-      const fee = web3.utils.fromWei(feeResult);
-      // console.log({ withdraw: fee });
-      const relayFee = getState().token.relayFee;
-      dispatch(
-        setRelayFee({
-          ...relayFee,
-          withdraw: fee,
-        })
-      );
-    } catch (err: any) {}
   };

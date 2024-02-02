@@ -2,10 +2,11 @@ import { Box, Modal } from "@mui/material";
 import classNames from "classnames";
 import { PrimaryLoading } from "components/common/PrimaryLoading";
 import { Icomoon } from "components/icon/Icomoon";
+import { roboto } from "config/font";
 import { useAppDispatch, useAppSelector } from "hooks/common";
 import Image from "next/image";
-import successIcon from "public/images/tx_success.png";
 import errorIcon from "public/images/tx_error.png";
+import successIcon from "public/images/tx_success.png";
 import { useMemo } from "react";
 import {
   setStakeLoadingParams,
@@ -13,15 +14,8 @@ import {
 } from "redux/reducers/AppSlice";
 import { handleTokenStake } from "redux/reducers/TokenSlice";
 import { RootState } from "redux/store";
-import { formatNumber } from "utils/numberUtils";
-import { roboto } from "config/font";
 import { getLsdTokenName, getTokenName } from "utils/configUtils";
-import { useContractWrite } from "wagmi";
-import {
-  getStakeManagerContract,
-  getStakeManagerContractAbi,
-} from "config/contract";
-import { getEvmChainId } from "config/env";
+import { formatNumber } from "utils/numberUtils";
 
 export const StakeLoadingModal = () => {
   const dispatch = useAppDispatch();
@@ -34,14 +28,6 @@ export const StakeLoadingModal = () => {
       };
     }
   );
-
-  const { writeAsync } = useContractWrite({
-    address: getStakeManagerContract() as `0x${string}`,
-    abi: getStakeManagerContractAbi(),
-    functionName: "stake",
-    args: [],
-    chainId: getEvmChainId(),
-  });
 
   const title = useMemo(() => {
     return stakeLoadingParams?.customTitle
@@ -86,11 +72,8 @@ export const StakeLoadingModal = () => {
     }
     dispatch(
       handleTokenStake(
-        writeAsync,
         stakeLoadingParams.amount + "",
         stakeLoadingParams.willReceiveAmount + "",
-        stakeLoadingParams.newLsdTokenBalance + "",
-        stakeLoadingParams.relayFee + "",
         true
       )
     );

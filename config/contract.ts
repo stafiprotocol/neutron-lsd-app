@@ -1,12 +1,9 @@
-import { isDev } from "./env";
 import appDevConfig from "./appConf/dev.json";
 import appProdConfig from "./appConf/prod.json";
-import lsdTokenContractAbi from "./abi/lsdTokenContractAbi.json";
-import stakeManagerContractAbi from "./abi/stakeManagerContractAbi.json";
-import { AbiItem } from "web3-utils";
+import { isDev } from "./env";
 
 /**
- * get lsdToken contract address
+ * get neutron lsdToken contract address
  */
 export function getLsdTokenContract() {
   if (isDev()) {
@@ -16,7 +13,7 @@ export function getLsdTokenContract() {
 }
 
 /**
- * get evm token stakeManager contract address
+ * get neutron stakeManager contract address
  */
 export function getStakeManagerContract() {
   if (isDev()) {
@@ -26,15 +23,11 @@ export function getStakeManagerContract() {
 }
 
 /**
- * get lsdToken token contract ABI
+ * get neutron poolAddress
  */
-export function getLsdTokenContractAbi() {
-  return lsdTokenContractAbi as AbiItem[];
-}
-
-/**
- * get evm token stakeManager contract ABI
- */
-export function getStakeManagerContractAbi() {
-  return stakeManagerContractAbi as AbiItem[];
+export function getPoolAddress() {
+  if (isDev()) {
+    return appDevConfig.contracts.poolAddress.address;
+  }
+  return appProdConfig.contracts.poolAddress.address;
 }

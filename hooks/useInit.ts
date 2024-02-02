@@ -1,4 +1,3 @@
-import { hooks, metaMask } from "connectors/metaMask";
 import dayjs from "dayjs";
 import { useEffect } from "react";
 import {
@@ -7,60 +6,25 @@ import {
   setUpdateFlag,
 } from "redux/reducers/AppSlice";
 import { updateApr } from "redux/reducers/LsdTokenSlice";
+import { updateCosmosTokenBalances } from "redux/reducers/TokenSlice";
+import { autoConnectKeplrChains } from "redux/reducers/WalletSlice";
 import {
-  setMetaMaskAccount,
-  setMetaMaskChainId,
-  setMetaMaskDisconnected,
-} from "redux/reducers/WalletSlice";
-import {
-  getStorage,
   STORAGE_KEY_DARK_MODE,
-  STORAGE_KEY_DISCONNECT_METAMASK,
   STORAGE_KEY_UNREAD_NOTICE,
+  getStorage,
 } from "utils/storageUtils";
 import { useAppDispatch } from "./common";
 import { useAppSlice } from "./selector";
 import { useInterval } from "./useInterval";
-import { updateTokenBalance } from "redux/reducers/TokenSlice";
-import { useWalletAccount } from "./useWalletAccount";
-import { useAccount, useNetwork } from "wagmi";
 
 export function useInit() {
   const dispatch = useAppDispatch();
   const { updateFlag, darkMode } = useAppSlice();
 
-  // const { useAccount: useMetaMaskAccount } = hooks;
-  // const metaMaskAccount = useMetaMaskAccount();
-  const { metaMaskAccount: walletMetaMaskAccount, metaMaskChainId } =
-    useWalletAccount();
-
-  const {
-    address: wagmiAddress,
-    isConnected: wagmiIsConnected,
-    isDisconnected: wagmiIsDisconnected,
-  } = useAccount();
-
-  const { chain: wagmiChain } = useNetwork();
-
-  useEffect(() => {
-    if (!wagmiIsConnected) {
-      dispatch(setMetaMaskAccount(undefined));
-    } else {
-      dispatch(setMetaMaskAccount(wagmiAddress));
-    }
-  }, [dispatch, wagmiAddress, wagmiIsConnected, wagmiIsDisconnected]);
-
-  useEffect(() => {
-    dispatch(setMetaMaskChainId(wagmiChain?.id ? wagmiChain.id + "" : "1"));
-  }, [dispatch, wagmiChain]);
-
   useEffect(() => {
     // Init local data.
     const unreadNotice = getStorage(STORAGE_KEY_UNREAD_NOTICE);
     dispatch(setUnreadNoticeFlag(!!unreadNotice));
-    dispatch(
-      setMetaMaskDisconnected(!!getStorage(STORAGE_KEY_DISCONNECT_METAMASK))
-    );
     dispatch(setDarkMode(!!getStorage(STORAGE_KEY_DARK_MODE)));
   }, [dispatch]);
 
@@ -77,37 +41,26 @@ export function useInit() {
     dispatch(setUpdateFlag(dayjs().unix()));
   }, 6000); // 6s
 
-  // useEffect(() => {
-  //   if (!metaMaskAccount) {
-  //     metaMask.connectEagerly();
-  //   }
-  //   dispatch(setMetaMaskAccount(metaMaskAccount));
-  // }, [dispatch, metaMaskAccount]);
+  useEffect(() => {
+    // Auto connect Keplr accounts
+    dispatch(autoConnectKeplrChains());
 
-  // useEffect(() => {
-  //   const listener = (chainId: any) => {
-  //     dispatch(setMetaMaskChainId(parseInt(chainId, 16) + ""));
-  //   };
-  //   if (window.ethereum && window.ethereum.isMetaMask) {
-  //     ethereum.request({ method: "eth_chainId" }).then((chainId: string) => {
-  //       dispatch(setMetaMaskChainId(parseInt(chainId, 16) + ""));
-  //       // clearDefaultProviderWeb3();
-  //     });
+    const onKeplrAccountChange = () => {
+      dispatch(autoConnectKeplrChains());
+    };
 
-  //     ethereum.on("chainChanged", listener);
-  //   }
+    // Keplr account change event.
+    addEventListener("keplr_keystorechange", onKeplrAccountChange);
 
-  //   return () => {
-  //     if (window.ethereum) {
-  //       ethereum?.removeListener("chainChanged", listener);
-  //     }
-  //   };
-  // }, [dispatch]);
+    return () => {
+      removeEventListener("keplr_keystorechange", onKeplrAccountChange);
+    };
+  }, [dispatch]);
 
   // Update wallet balances.
   useEffect(() => {
-    dispatch(updateTokenBalance());
-  }, [dispatch, walletMetaMaskAccount, metaMaskChainId, updateFlag]);
+    dispatch(updateCosmosTokenBalances());
+  }, [dispatch, updateFlag]);
 
   // Change body backgroundColor
   useEffect(() => {

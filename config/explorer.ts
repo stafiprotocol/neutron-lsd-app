@@ -1,31 +1,32 @@
 import { isDev } from "./env";
 import appDevConfig from "./appConf/dev.json";
 import appProdConfig from "./appConf/prod.json";
+import { lsdTokenChainConfig, neutronChainConfig } from "./chain";
 
-export function getExplorerUrl() {
-  if (isDev()) {
-    return appDevConfig.explorer;
+export function getExplorerUrl(chainId?: string) {
+  if (chainId === lsdTokenChainConfig.chainId) {
+    return lsdTokenChainConfig.explorerUrl;
   }
-  return appProdConfig.explorer;
+  return neutronChainConfig.explorerUrl;
 }
 
-export function getExplorerTxUrl(txHash: string | undefined) {
+export function getExplorerTxUrl(txHash: string | undefined, chainId?: string) {
   if (isDev()) {
-    return `${getExplorerUrl()}/tx/${txHash}`;
+    return `${getExplorerUrl(chainId)}/tx/${txHash}`;
   }
-  return `${getExplorerUrl()}/tx/${txHash}`;
+  return `${getExplorerUrl(chainId)}/tx/${txHash}`;
 }
 
-export function getExplorerAccountUrl(account: string) {
+export function getExplorerAccountUrl(account: string, chainId?: string) {
   if (isDev()) {
-    return `${getExplorerUrl()}/address/${account}`;
+    return `${getExplorerUrl(chainId)}/address/${account}`;
   }
-  return `${getExplorerUrl()}/address/${account}`;
+  return `${getExplorerUrl(chainId)}/address/${account}`;
 }
 
-export function getExplorerTokenTxUrl(address: any) {
+export function getExplorerTokenTxUrl(address: any, chainId?: string) {
   if (isDev()) {
-    return `${getExplorerUrl()}/address/${address}#tokentxns`;
+    return `${getExplorerUrl(chainId)}/address/${address}#tokentxns`;
   }
-  return `${getExplorerUrl()}/address/${address}#tokentxns`;
+  return `${getExplorerUrl(chainId)}/address/${address}#tokentxns`;
 }

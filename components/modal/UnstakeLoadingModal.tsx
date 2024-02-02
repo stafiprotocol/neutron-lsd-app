@@ -2,13 +2,6 @@ import { Box, Modal } from "@mui/material";
 import classNames from "classnames";
 import { PrimaryLoading } from "components/common/PrimaryLoading";
 import { Icomoon } from "components/icon/Icomoon";
-import {
-  getLsdTokenContract,
-  getLsdTokenContractAbi,
-  getStakeManagerContract,
-  getStakeManagerContractAbi,
-} from "config/contract";
-import { getEvmChainId } from "config/env";
 import { roboto } from "config/font";
 import { useAppDispatch, useAppSelector } from "hooks/common";
 import Image from "next/image";
@@ -25,7 +18,6 @@ import { getLsdTokenName, getTokenName } from "utils/configUtils";
 import { getUnstakeDaysLeft } from "utils/lsdTokenUtils";
 import { formatNumber } from "utils/numberUtils";
 import snackbarUtil from "utils/snackbarUtils";
-import { useContractWrite } from "wagmi";
 
 export const UnstakeLoadingModal = () => {
   const dispatch = useAppDispatch();
@@ -39,22 +31,6 @@ export const UnstakeLoadingModal = () => {
       };
     }
   );
-
-  const { writeAsync: approveWriteAsync } = useContractWrite({
-    address: getLsdTokenContract() as `0x${string}`,
-    abi: getLsdTokenContractAbi(),
-    functionName: "approve",
-    args: [],
-    chainId: getEvmChainId(),
-  });
-
-  const { writeAsync: unstakeWriteAsync } = useContractWrite({
-    address: getStakeManagerContract() as `0x${string}`,
-    abi: getStakeManagerContractAbi(),
-    functionName: "unstake",
-    args: [],
-    chainId: getEvmChainId(),
-  });
 
   const title = useMemo(() => {
     return unstakeLoadingParams?.customTitle
@@ -115,12 +91,9 @@ export const UnstakeLoadingModal = () => {
 
     dispatch(
       handleLsdTokenUnstake(
-        approveWriteAsync,
-        unstakeWriteAsync,
         unstakeLoadingParams.amount + "",
-        unstakeLoadingParams.willReceiveAmount + "",
+        unstakeLoadingParams.targetAddress + "",
         unstakeLoadingParams.newLsdTokenBalance + "",
-        unstakeLoadingParams.relayFee + "",
         true
       )
     );

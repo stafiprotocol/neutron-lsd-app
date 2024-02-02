@@ -1,63 +1,54 @@
+import classNames from "classnames";
+import { BubblesLoading } from "components/common/BubblesLoading";
 import { Icomoon } from "components/icon/Icomoon";
-import { getEvmChainId, getEvmChainName } from "config/env";
+import { lsdTokenChainConfig, neutronChainConfig } from "config/chain";
 import { useAppDispatch, useAppSelector } from "hooks/common";
+import { useAppSlice } from "hooks/selector";
+import { useApr } from "hooks/useApr";
 import { useBalance } from "hooks/useBalance";
-import { useWalletAccount } from "hooks/useWalletAccount";
+import { useCosmosChainAccount } from "hooks/useCosmosChainAccount";
+import { useLsdTokenRate } from "hooks/useLsdTokenRate";
+import { usePrice } from "hooks/usePrice";
+import { ChainConfig } from "interfaces/common";
+import { bindHover, bindPopover } from "material-ui-popup-state";
+import HoverPopover from "material-ui-popup-state/HoverPopover";
+import { usePopupState } from "material-ui-popup-state/hooks";
+import Image from "next/image";
 import { useRouter } from "next/router";
 import { useMemo, useState } from "react";
-import { handleLsdTokenUnstake } from "redux/reducers/TokenSlice";
 import { updateLsdTokenBalance } from "redux/reducers/LsdTokenSlice";
+import { handleLsdTokenUnstake } from "redux/reducers/TokenSlice";
+import { connectKeplrAccount } from "redux/reducers/WalletSlice";
 import { RootState } from "redux/store";
 import { isEmptyValue, openLink } from "utils/commonUtils";
-import { formatLargeAmount, formatNumber } from "utils/numberUtils";
-import Web3 from "web3";
-import { CustomButton } from "../common/CustomButton";
-import { CustomNumberInput } from "../common/CustomNumberInput";
-import { DataLoading } from "../common/DataLoading";
 import {
+  getBaseTokenName,
+  getEstUnstakeFee,
   getLsdTokenName,
   getTokenName,
   getUnstakeTipLink,
-  needRelayFee,
 } from "utils/configUtils";
-import Image from "next/image";
 import { getLsdTokenIcon } from "utils/iconUtils";
-import { useLsdTokenRate } from "hooks/useLsdTokenRate";
-import { useApr } from "hooks/useApr";
-import { useAppSlice } from "hooks/selector";
-import aprIcon from "public/images/apr_icon.svg";
-import HoverPopover from "material-ui-popup-state/HoverPopover";
-import { bindPopover, bindHover } from "material-ui-popup-state";
-import classNames from "classnames";
-import { usePopupState } from "material-ui-popup-state/hooks";
 import { getUnstakeDaysLeft } from "utils/lsdTokenUtils";
-import { useRelayFee } from "hooks/useRelayFee";
-import snackbarUtil from "utils/snackbarUtils";
-import { NETWORK_ERR_MESSAGE } from "constants/common";
-import { useConnect, useContractWrite, useSwitchNetwork } from "wagmi";
-import {
-  getLsdTokenContract,
-  getLsdTokenContractAbi,
-  getStakeManagerContract,
-  getStakeManagerContractAbi,
-} from "config/contract";
-import { usePrice } from "hooks/usePrice";
-import { BubblesLoading } from "components/common/BubblesLoading";
+import { formatLargeAmount, formatNumber } from "utils/numberUtils";
+import { CustomButton } from "../common/CustomButton";
+import { CustomNumberInput } from "../common/CustomNumberInput";
+import { DataLoading } from "../common/DataLoading";
 
 export const LsdTokenUnstake = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { darkMode } = useAppSlice();
 
-  const { metaMaskAccount, metaMaskChainId } = useWalletAccount();
+  const neutronAccount = useCosmosChainAccount(neutronChainConfig.chainId);
+  const lsdTokenAccount = useCosmosChainAccount(lsdTokenChainConfig.chainId);
   const { balance } = useBalance();
   const lsdTokenRate = useLsdTokenRate();
 
   const { lsdBalance } = useBalance();
-  const { relayFee } = useRelayFee();
 
   const { apr } = useApr();
-  const { tokenPrice, gasPrice } = usePrice();
+  const { ntrnPrice, tokenPrice } = usePrice();
 
   const [unstakeAmount, setUnstakeAmount] = useState("");
 
@@ -70,28 +61,9 @@ export const LsdTokenUnstake = () => {
     }
   );
 
-  const { connectors, connectAsync } = useConnect();
-  const { switchNetwork } = useSwitchNetwork();
-
-  const { writeAsync: approveWriteAsync } = useContractWrite({
-    address: getLsdTokenContract() as `0x${string}`,
-    abi: getLsdTokenContractAbi(),
-    functionName: "approve",
-    args: [],
-    chainId: getEvmChainId(),
-  });
-
-  const { writeAsync: unstakeWriteAsync } = useContractWrite({
-    address: getStakeManagerContract() as `0x${string}`,
-    abi: getStakeManagerContractAbi(),
-    functionName: "unstake",
-    args: [],
-    chainId: getEvmChainId(),
-  });
-
   const walletNotConnected = useMemo(() => {
-    return !metaMaskAccount;
-  }, [metaMaskAccount]);
+    return !neutronAccount || !lsdTokenAccount;
+  }, [neutronAccount, lsdTokenAccount]);
 
   const availableBalance = useMemo(() => {
     if (walletNotConnected) {
@@ -99,10 +71,6 @@ export const LsdTokenUnstake = () => {
     }
     return lsdBalance;
   }, [lsdBalance, walletNotConnected]);
-
-  const isWrongMetaMaskNetwork = useMemo(() => {
-    return Number(metaMaskChainId) !== getEvmChainId();
-  }, [metaMaskChainId]);
 
   const unstakeValue = useMemo(() => {
     if (
@@ -118,37 +86,22 @@ export const LsdTokenUnstake = () => {
   }, [unstakeAmount, tokenPrice, lsdTokenRate]);
 
   const estimateFee = useMemo(() => {
-    const gasLimit = 269319;
-
-    return Web3.utils.fromWei(
-      Web3.utils
-        .toBN(gasLimit)
-        .mul(Web3.utils.toBN(Number(gasPrice)))
-        .toString(),
-      "gwei"
-    );
-  }, [gasPrice]);
+    return getEstUnstakeFee();
+  }, []);
 
   const transactionCost = useMemo(() => {
-    if (!needRelayFee()) {
-      if (isNaN(Number(estimateFee))) {
-        return "--";
-      }
-      return Number(estimateFee) + "";
-    } else {
-      if (isNaN(Number(relayFee.unstake)) || isNaN(Number(estimateFee))) {
-        return "--";
-      }
-      return Number(relayFee.unstake) + Number(estimateFee) + "";
-    }
-  }, [relayFee, estimateFee]);
-
-  const transactionCostValue = useMemo(() => {
-    if (isNaN(Number(transactionCost)) || isNaN(Number(tokenPrice))) {
+    if (isNaN(Number(estimateFee))) {
       return "--";
     }
-    return Number(transactionCost) * Number(tokenPrice) + "";
-  }, [transactionCost, tokenPrice]);
+    return Number(estimateFee) + "";
+  }, [estimateFee]);
+
+  const transactionCostValue = useMemo(() => {
+    if (isNaN(Number(transactionCost)) || isNaN(Number(ntrnPrice))) {
+      return "--";
+    }
+    return Number(transactionCost) * Number(ntrnPrice) + "";
+  }, [transactionCost, ntrnPrice]);
 
   const redeemFee = useMemo(() => {
     return "0";
@@ -169,14 +122,13 @@ export const LsdTokenUnstake = () => {
 
   const [buttonDisabled, buttonText, isButtonSecondary] = useMemo(() => {
     if (walletNotConnected) {
-      return [false, "Connect Wallet"];
-    }
-    if (isWrongMetaMaskNetwork) {
-      return [
-        false,
-        `Wrong network, click to change into ${getEvmChainName()}`,
-        true,
-      ];
+      const text =
+        !neutronAccount && !lsdTokenAccount
+          ? "Connect Wallet"
+          : !neutronAccount
+          ? `Connect ${neutronChainConfig.displayHubName}`
+          : `Connect ${lsdTokenChainConfig.displayHubName}`;
+      return [false, text, true];
     }
 
     if (
@@ -201,12 +153,13 @@ export const LsdTokenUnstake = () => {
 
     return [false, "Unstake"];
   }, [
-    isWrongMetaMaskNetwork,
     availableBalance,
     unstakeAmount,
     walletNotConnected,
     estimateFee,
     balance,
+    neutronAccount,
+    lsdTokenAccount,
   ]);
 
   const newRTokenBalance = useMemo(() => {
@@ -224,26 +177,18 @@ export const LsdTokenUnstake = () => {
   };
 
   const clickConnectWallet = async () => {
-    const metamaskConnector = connectors.find(
-      (item) => item.name === "MetaMask"
-    );
-    // todo: install metamask
-    if (!metamaskConnector) return;
-    if (!metaMaskAccount) {
-      await connectAsync({ connector: metamaskConnector }).catch((err) =>
-        console.log(err)
-      );
-    } else if (isWrongMetaMaskNetwork) {
-      switchNetwork && switchNetwork(getEvmChainId());
+    const connectChainConfigs: ChainConfig[] = [];
+    if (!neutronAccount) {
+      connectChainConfigs.push(neutronChainConfig);
     }
+    if (!lsdTokenAccount) {
+      connectChainConfigs.push(lsdTokenChainConfig);
+    }
+    dispatch(connectKeplrAccount(connectChainConfigs));
   };
 
   const clickMax = () => {
-    if (
-      isWrongMetaMaskNetwork ||
-      walletNotConnected ||
-      isNaN(Number(availableBalance))
-    ) {
+    if (walletNotConnected || isNaN(Number(availableBalance))) {
       return;
     }
     setUnstakeAmount(
@@ -266,23 +211,16 @@ export const LsdTokenUnstake = () => {
 
   const clickUnstake = () => {
     // Connect Wallet
-    if (walletNotConnected || isWrongMetaMaskNetwork) {
+    if (walletNotConnected) {
       clickConnectWallet();
-      return;
-    }
-    if (needRelayFee() && isNaN(Number(relayFee.unstake))) {
-      snackbarUtil.error(NETWORK_ERR_MESSAGE);
       return;
     }
 
     dispatch(
       handleLsdTokenUnstake(
-        approveWriteAsync,
-        unstakeWriteAsync,
         unstakeAmount,
+        lsdTokenAccount?.bech32Address,
         willReceiveAmount,
-        newRTokenBalance,
-        relayFee.unstake + "",
         false,
         (success) => {
           dispatch(updateLsdTokenBalance());
@@ -567,19 +505,6 @@ export const LsdTokenUnstake = () => {
             darkMode ? "dark" : ""
           )}
         >
-          {needRelayFee() && (
-            <div className="flex justify-between">
-              <div>Relay Fee</div>
-              <div>
-                {isEmptyValue(relayFee.unstake) ? (
-                  <BubblesLoading />
-                ) : (
-                  formatNumber(relayFee.unstake, { decimals: 4 })
-                )}{" "}
-                {getTokenName()}
-              </div>
-            </div>
-          )}
           <div className="flex justify-between my-[.16rem]">
             <div>Tx Fee</div>
             <div>
@@ -588,7 +513,7 @@ export const LsdTokenUnstake = () => {
               ) : (
                 formatNumber(estimateFee, { decimals: 4 })
               )}{" "}
-              {getTokenName()}
+              {getBaseTokenName()}
             </div>
           </div>
           <div className="h-[1px] bg-color-popoverDivider my-[.1rem]" />
@@ -600,7 +525,7 @@ export const LsdTokenUnstake = () => {
               ) : (
                 formatNumber(transactionCost, { decimals: 4 })
               )}{" "}
-              {getTokenName()}
+              {getBaseTokenName()}
             </div>
           </div>
           <div className="mt-[.16rem] text-right flex items-center justify-end mb-[.16rem]">

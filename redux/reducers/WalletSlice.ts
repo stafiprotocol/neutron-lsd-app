@@ -1,84 +1,112 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { metaMask } from "connectors/metaMask";
+import { lsdTokenChainConfig, neutronChainConfig } from "config/chain";
+import { WALLET_NOT_INSTALLED_MESSAGE } from "constants/common";
+import { ChainConfig, CosmosAccountMap } from "interfaces/common";
+import { isKeplrInstalled } from "utils/commonUtils";
+import { _connectKeplr } from "utils/cosmosUtils";
 import snackbarUtil from "utils/snackbarUtils";
 import {
-  STORAGE_KEY_DISCONNECT_METAMASK,
-  saveStorage,
+  clearCosmosNetworkAllowedFlag,
+  isCosmosNetworkAllowed,
 } from "utils/storageUtils";
 import { AppThunk } from "../store";
 
 export interface WalletState {
-  metaMaskAccount: string | undefined;
-  metaMaskChainId: string | undefined;
-  metaMaskDisconnected: boolean;
+  cosmosAccounts: CosmosAccountMap;
 }
 
 const initialState: WalletState = {
-  metaMaskAccount: undefined,
-  metaMaskChainId: undefined,
-  metaMaskDisconnected: false,
+  cosmosAccounts: {},
 };
 
 export const walletSlice = createSlice({
   name: "wallet",
   initialState,
   reducers: {
-    setMetaMaskAccount: (
+    setCosmosAccounts: (
       state: WalletState,
-      action: PayloadAction<string | undefined>
+      action: PayloadAction<CosmosAccountMap>
     ) => {
-      state.metaMaskAccount = action.payload;
-    },
-    setMetaMaskChainId: (
-      state: WalletState,
-      action: PayloadAction<string | undefined>
-    ) => {
-      state.metaMaskChainId = action.payload;
-    },
-    setMetaMaskDisconnected: (
-      state: WalletState,
-      action: PayloadAction<boolean>
-    ) => {
-      saveStorage(STORAGE_KEY_DISCONNECT_METAMASK, action.payload ? "1" : "");
-      state.metaMaskDisconnected = action.payload;
+      state.cosmosAccounts = action.payload;
     },
   },
 });
 
-export const {
-  setMetaMaskAccount,
-  setMetaMaskChainId,
-  setMetaMaskDisconnected,
-} = walletSlice.actions;
+export const { setCosmosAccounts } = walletSlice.actions;
 
 export default walletSlice.reducer;
 
-/**
- * connect to MetaMask.
- */
-export const connectMetaMask =
-  (targetChainId: number | undefined, cb?: Function): AppThunk =>
+export const updateCosmosAccounts =
+  (accountMap: CosmosAccountMap): AppThunk =>
   async (dispatch, getState) => {
-    try {
-      const handleError = (err: any) => {
-        snackbarUtil.error(err.message);
-        cb && cb(false);
-      };
+    const newAccounts = {
+      ...getState().wallet.cosmosAccounts,
+      ...accountMap,
+    };
+    // console.log({ newAccounts });
+    dispatch(setCosmosAccounts(newAccounts));
+  };
 
-      metaMask
-        .activate(targetChainId)
-        .then(() => {
-          cb && cb(true);
-        })
-        .catch(handleError);
+/**
+ * Auto connect keplr.
+ */
+export const autoConnectKeplrChains =
+  (): AppThunk => async (dispatch, getState) => {
+    const allowedChains: ChainConfig[] = [];
 
-      dispatch(setMetaMaskDisconnected(false));
-    } catch (err: unknown) {}
+    if (isCosmosNetworkAllowed(neutronChainConfig.chainId)) {
+      allowedChains.push(neutronChainConfig);
+    }
+    if (isCosmosNetworkAllowed(lsdTokenChainConfig.chainId)) {
+      allowedChains.push(lsdTokenChainConfig);
+    }
+
+    if (allowedChains.length === 0) {
+      return;
+    }
+    dispatch(connectKeplrAccount(allowedChains));
+  };
+
+/**
+ * Connect to Keplr extension.
+ */
+export const connectKeplrAccount =
+  (chainConfigs: ChainConfig[]): AppThunk =>
+  async (dispatch, getState) => {
+    if (chainConfigs.length === 0) {
+      return;
+    }
+    if (!isKeplrInstalled()) {
+      snackbarUtil.error(WALLET_NOT_INSTALLED_MESSAGE);
+      return;
+    }
+
+    const requests = chainConfigs.map((chainConfig) => {
+      return _connectKeplr(chainConfig);
+    });
+
+    const results = await Promise.all(requests);
+
+    const newAccounts: CosmosAccountMap = {};
+    results
+      .filter((item) => !!item)
+      .forEach((account, index) => {
+        newAccounts[chainConfigs[index].chainId] = account;
+      });
+
+    dispatch(updateCosmosAccounts(newAccounts));
   };
 
 /**
  * disconnect from wallet
  */
-export const disconnectWallet = (): AppThunk => async (dispatch, getState) => {
-  dispatch(setMetaMaskDisconnected(true));
-};
+export const disconnectWallet =
+  (chainId: string): AppThunk =>
+  async (dispatch, getState) => {
+    if (!chainId) {
+      return;
+    }
+
+    dispatch(updateCosmosAccounts({ [chainId]: null }));
+    clearCosmosNetworkAllowedFlag(chainId);
+  };

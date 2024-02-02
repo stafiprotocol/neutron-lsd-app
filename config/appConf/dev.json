@@ -7,10 +7,13 @@
   "explorer": "https://testnet.bscscan.com",
   "contracts": {
     "lsdToken": {
-      "address": "0x1d6e3423d2cccf068fae1f787f7626d7a965bca9"
+      "address": "neutron1lynzj6ym0y4ne69cm4m3zhmdyuql9clapcdx6k8kd3grxl494g0quy4xjq"
     },
     "stakeManager": {
-      "address": "0x9c0f06f6769247dd663ef0602e09f26b293c12df"
+      "address": "neutron16ecn09hyz97rw6v6py2tddpcj2k7fvkfm6tlg5xzqywdmgmnc74qhya7au"
+    },
+    "poolAddress": {
+      "address": "cosmos18m6ym3tq08wweuuhjmfukfjpraw8zdxfu6fhqv75y5eu4r4lgl8qn4dksq"
     }
   }
 }

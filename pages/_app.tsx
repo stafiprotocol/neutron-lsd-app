@@ -14,8 +14,6 @@ import { SnackbarUtilsConfigurator } from "utils/snackbarUtils";
 import "styles/globals.css";
 
 import { MaterialDesignContent } from "notistack";
-import { WagmiConfig } from "wagmi";
-import { wagmiConfig } from "connectors/walletConnect";
 
 export type NextPageWithLayout<P = {}, IP = P> = NextPage<P, IP> & {
   getLayout?: (page: ReactElement) => ReactNode;
@@ -98,10 +96,8 @@ const MyAppWrapper = ({ Component, pageProps }: any) => {
           warning: StyledMaterialDesignContent,
         }}
       >
-        <WagmiConfig config={wagmiConfig}>
-          <SnackbarUtilsConfigurator />
-          <Layout>{getLayout(<Component {...pageProps} />)}</Layout>
-        </WagmiConfig>
+        <SnackbarUtilsConfigurator />
+        <Layout>{getLayout(<Component {...pageProps} />)}</Layout>
       </SnackbarProvider>
     </ThemeProvider>
   );

@@ -1,4 +1,5 @@
 import BN from "bn.js";
+import { toBN } from "web3-utils";
 
 export function formatNumber(
   num: string | number | undefined,
@@ -90,17 +91,57 @@ export function formatLargeAmount(amount: string | number) {
   return formatNumber(amount, { decimals: 4 });
 }
 
-export function chainAmountToHuman(num: string | number) {
+export function chainAmountToHuman(
+  num: string | number | undefined,
+  decimals: number = 6
+) {
   if (num === "" || num === undefined || num === null || isNaN(Number(num))) {
     return "--";
   }
-  const factor = "1000000000000000000";
+  const factor = Math.pow(10, decimals) + "";
 
   return Number(num) / Number(factor) + "";
 }
 
-export function stakeAmountToBn(amount: string | number): BN {
-  const precision = 9; // 10^9
+export function stakeAmountToBn(
+  amount: string | number,
+  decimals: number = 6
+): BN {
+  const precision = decimals; // 10^9
   const intAmount = Number(amount) * Math.pow(10, precision);
   return new BN(intAmount).mul(new BN(Math.pow(10, precision)));
+}
+
+export function amountToChain(
+  input: string | number,
+  decimals: number = 6
+): string {
+  if (isNaN(Number(input))) {
+    return "--";
+  }
+  let factor = Math.pow(10, decimals) + "";
+
+  const multiplyRes = toBN(Number(input) * 1000000 + "").mul(
+    toBN(Number(factor) / 1000000)
+  );
+  const res = formatScientificNumber(multiplyRes);
+  return res;
+}
+
+function formatScientificNumber(x: any): string {
+  if (Math.abs(x) < 1.0) {
+    var e = parseInt(x.toString().split("e-")[1]);
+    if (e) {
+      x *= Math.pow(10, e - 1);
+      x = "0." + new Array(e).join("0") + x.toString().substring(2);
+    }
+  } else {
+    var e = parseInt(x.toString().split("+")[1]);
+    if (e > 20) {
+      e -= 20;
+      x /= Math.pow(10, e);
+      x += new Array(e + 1).join("0");
+    }
+  }
+  return x.toString();
 }

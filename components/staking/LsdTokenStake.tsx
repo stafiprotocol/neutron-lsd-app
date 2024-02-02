@@ -1,44 +1,35 @@
+import classNames from "classnames";
+import { BubblesLoading } from "components/common/BubblesLoading";
 import { Icomoon } from "components/icon/Icomoon";
-import { getEvmChainId, getEvmChainName } from "config/env";
+import { lsdTokenChainConfig, neutronChainConfig } from "config/chain";
+import { DEFAULT_MIN_STAKE_AMOUNT } from "constants/common";
 import { useAppDispatch, useAppSelector } from "hooks/common";
+import { useAppSlice } from "hooks/selector";
+import { useApr } from "hooks/useApr";
+import { useBalance } from "hooks/useBalance";
+import { useCosmosChainAccount } from "hooks/useCosmosChainAccount";
 import { useLsdTokenRate } from "hooks/useLsdTokenRate";
-import { useWalletAccount } from "hooks/useWalletAccount";
+import { usePrice } from "hooks/usePrice";
+import { ChainConfig } from "interfaces/common";
+import { bindPopover } from "material-ui-popup-state";
+import HoverPopover from "material-ui-popup-state/HoverPopover";
+import { bindHover, usePopupState } from "material-ui-popup-state/hooks";
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import {
-  handleTokenStake,
-  updateTokenBalance,
-} from "redux/reducers/TokenSlice";
-import { updateLsdTokenBalance } from "redux/reducers/LsdTokenSlice";
+import { handleTokenStake } from "redux/reducers/TokenSlice";
+import { connectKeplrAccount } from "redux/reducers/WalletSlice";
 import { RootState } from "redux/store";
+import { isEmptyValue } from "utils/commonUtils";
+import {
+  getEstStakeFee,
+  getLsdTokenName,
+  getTokenName,
+} from "utils/configUtils";
+import { getTokenIcon } from "utils/iconUtils";
 import { formatLargeAmount, formatNumber } from "utils/numberUtils";
-import Web3 from "web3";
 import { CustomButton } from "../common/CustomButton";
 import { CustomNumberInput } from "../common/CustomNumberInput";
 import { DataLoading } from "../common/DataLoading";
-import { getTokenIcon } from "utils/iconUtils";
-import { useBalance } from "hooks/useBalance";
-import { getLsdTokenName, getTokenName, needRelayFee } from "utils/configUtils";
-import { useApr } from "hooks/useApr";
-import { useAppSlice } from "hooks/selector";
-import HoverPopover from "material-ui-popup-state/HoverPopover";
-import { bindPopover } from "material-ui-popup-state";
-import { bindHover, usePopupState } from "material-ui-popup-state/hooks";
-import classNames from "classnames";
-import {
-  DEFAULT_MIN_STAKE_AMOUNT,
-  NETWORK_ERR_MESSAGE,
-} from "constants/common";
-import { useRelayFee } from "hooks/useRelayFee";
-import snackbarUtil from "utils/snackbarUtils";
-import { useConnect, useContractWrite, useSwitchNetwork } from "wagmi";
-import {
-  getStakeManagerContract,
-  getStakeManagerContractAbi,
-} from "config/contract";
-import { isEmptyValue } from "utils/commonUtils";
-import { BubblesLoading } from "components/common/BubblesLoading";
-import { usePrice } from "hooks/usePrice";
 
 export const LsdTokenStake = () => {
   const dispatch = useAppDispatch();
@@ -50,10 +41,18 @@ export const LsdTokenStake = () => {
   const { tokenPrice, gasPrice } = usePrice();
 
   const [stakeAmount, setStakeAmount] = useState("");
-  const { metaMaskChainId, metaMaskAccount } = useWalletAccount();
+  const neutronAccount = useCosmosChainAccount(neutronChainConfig.chainId);
+  const lsdTokenAccount = useCosmosChainAccount(lsdTokenChainConfig.chainId);
 
   const { balance } = useBalance();
-  const { relayFee } = useRelayFee();
+
+  const availableBalance = useMemo(() => {
+    if (!balance || isNaN(Number(balance))) {
+      return "--";
+    }
+    const reserveAmount = lsdTokenChainConfig.stakeReserveAmount || 0.05;
+    return Math.max(0, Number(balance) - reserveAmount - getEstStakeFee()) + "";
+  }, [balance]);
 
   const { stakeLoading } = useAppSelector((state: RootState) => {
     return {
@@ -61,24 +60,9 @@ export const LsdTokenStake = () => {
     };
   });
 
-  const { connectAsync, connectors } = useConnect();
-  const { switchNetwork } = useSwitchNetwork();
-
-  const { writeAsync } = useContractWrite({
-    address: getStakeManagerContract() as `0x${string}`,
-    abi: getStakeManagerContractAbi(),
-    functionName: "stake",
-    args: [],
-    chainId: getEvmChainId(),
-  });
-
   const walletNotConnected = useMemo(() => {
-    return !metaMaskAccount;
-  }, [metaMaskAccount]);
-
-  const isWrongMetaMaskNetwork = useMemo(() => {
-    return Number(metaMaskChainId) !== getEvmChainId();
-  }, [metaMaskChainId]);
+    return !neutronAccount || !lsdTokenAccount;
+  }, [neutronAccount, lsdTokenAccount]);
 
   const stakeValue = useMemo(() => {
     if (
@@ -104,31 +88,15 @@ export const LsdTokenStake = () => {
   }, [stakeAmount, lsdTokenRate]);
 
   const estimateFee = useMemo(() => {
-    const gasLimit = 104526;
-
-    if (isNaN(gasPrice)) {
-      return "--";
-    }
-
-    return Web3.utils.fromWei(
-      Web3.utils.toBN(gasLimit).mul(Web3.utils.toBN(gasPrice)).toString(),
-      "gwei"
-    );
-  }, [gasPrice]);
+    return getEstStakeFee();
+  }, []);
 
   const transactionCost = useMemo(() => {
-    if (!needRelayFee()) {
-      if (isNaN(Number(estimateFee))) {
-        return "--";
-      }
-      return Number(estimateFee) + "";
-    } else {
-      if (isNaN(Number(estimateFee)) || isNaN(Number(relayFee.stake))) {
-        return "--";
-      }
-      return Number(estimateFee) + Number(relayFee.stake) + "";
+    if (isNaN(Number(estimateFee))) {
+      return "--";
     }
-  }, [estimateFee, relayFee]);
+    return Number(estimateFee) + "";
+  }, [estimateFee]);
 
   const transactionCostValue = useMemo(() => {
     if (isNaN(Number(transactionCost)) || isNaN(Number(tokenPrice))) {
@@ -139,20 +107,19 @@ export const LsdTokenStake = () => {
 
   const [buttonDisabled, buttonText, isButtonSecondary] = useMemo(() => {
     if (walletNotConnected) {
-      return [false, "Connect Wallet"];
-    }
-    if (isWrongMetaMaskNetwork) {
-      return [
-        false,
-        `Wrong network, click to change into ${getEvmChainName()}`,
-        true,
-      ];
+      const text =
+        !neutronAccount && !lsdTokenAccount
+          ? "Connect Wallet"
+          : !neutronAccount
+          ? `Connect ${neutronChainConfig.displayHubName}`
+          : `Connect ${lsdTokenChainConfig.displayHubName}`;
+      return [false, text, true];
     }
     if (
       !stakeAmount ||
       isNaN(Number(stakeAmount)) ||
       Number(stakeAmount) === 0 ||
-      isNaN(Number(balance))
+      isNaN(Number(availableBalance))
     ) {
       return [true, "Stake"];
     }
@@ -164,26 +131,17 @@ export const LsdTokenStake = () => {
       ];
     }
 
-    if (
-      Number(stakeAmount) +
-        (isNaN(Number(estimateFee)) ? 0 : Number(estimateFee) * 1.4) >
-      Number(balance)
-    ) {
+    if (Number(stakeAmount) > Number(availableBalance)) {
       return [true, `Not Enough ${getTokenName()} to Stake`];
-    }
-
-    if (!writeAsync) {
-      return [true, "Initializing"];
     }
 
     return [false, "Stake"];
   }, [
-    isWrongMetaMaskNetwork,
-    balance,
+    availableBalance,
     stakeAmount,
     walletNotConnected,
-    estimateFee,
-    writeAsync,
+    neutronAccount,
+    lsdTokenAccount,
   ]);
 
   const newRTokenBalance = useMemo(() => {
@@ -198,31 +156,21 @@ export const LsdTokenStake = () => {
   }, [lsdBalance, lsdTokenRate, stakeAmount]);
 
   const clickConnectWallet = async () => {
-    const metamaskConnector = connectors.find(
-      (item) => item.name === "MetaMask"
-    );
-    // todo: install metamask
-    if (!metamaskConnector) return;
-    if (!metaMaskAccount) {
-      await connectAsync({ connector: metamaskConnector }).catch((err) =>
-        console.log(err)
-      );
-    } else if (isWrongMetaMaskNetwork) {
-      switchNetwork && switchNetwork(getEvmChainId());
+    const connectChainConfigs: ChainConfig[] = [];
+    if (!neutronAccount) {
+      connectChainConfigs.push(neutronChainConfig);
     }
+    if (!lsdTokenAccount) {
+      connectChainConfigs.push(lsdTokenChainConfig);
+    }
+    dispatch(connectKeplrAccount(connectChainConfigs));
   };
 
   const clickMax = () => {
-    if (
-      isWrongMetaMaskNetwork ||
-      walletNotConnected ||
-      isNaN(Number(balance))
-    ) {
+    if (walletNotConnected || isNaN(Number(availableBalance))) {
       return;
     }
-    let amount = Number(balance);
-    if (isNaN(Number(estimateFee))) return;
-    amount = Math.max(Number(balance) - Number(estimateFee) - 0.01, 0);
+    let amount = Number(availableBalance);
 
     if (Number(amount) > 0) {
       setStakeAmount(
@@ -236,28 +184,19 @@ export const LsdTokenStake = () => {
 
   const clickStake = () => {
     // Connect Wallet
-    if (walletNotConnected || isWrongMetaMaskNetwork) {
+    if (walletNotConnected) {
       clickConnectWallet();
-      return;
-    }
-    if (needRelayFee() && isNaN(Number(relayFee.stake))) {
-      snackbarUtil.error(NETWORK_ERR_MESSAGE);
       return;
     }
 
     dispatch(
       handleTokenStake(
-        writeAsync,
         Number(stakeAmount) + "",
         willReceiveAmount,
-        newRTokenBalance,
-        relayFee.stake + "",
         false,
         (success) => {
-          dispatch(updateTokenBalance());
           if (success) {
             setStakeAmount("");
-            dispatch(updateLsdTokenBalance());
           }
         }
       )
@@ -327,7 +266,7 @@ export const LsdTokenStake = () => {
               <div className="flex items-center">
                 <div className="text-color-text2">Balance</div>
                 <div className="ml-[.06rem] text-color-text1">
-                  {formatNumber(balance)}
+                  {formatNumber(availableBalance)}
                 </div>
               </div>
             </div>
@@ -516,19 +455,6 @@ export const LsdTokenStake = () => {
             darkMode ? "dark" : ""
           )}
         >
-          {needRelayFee() && (
-            <div className="flex justify-between">
-              <div>Relay Fee</div>
-              <div>
-                {isEmptyValue(relayFee.stake) ? (
-                  <BubblesLoading />
-                ) : (
-                  formatNumber(relayFee.stake, { decimals: 4 })
-                )}{" "}
-                {getTokenName()}
-              </div>
-            </div>
-          )}
           <div className="flex justify-between my-[.16rem]">
             <div>Tx Fee</div>
             <div>

@@ -1,22 +1,25 @@
 {
-  "appTitle": "EVM LSD App",
+  "appTitle": "Neutron LSD App",
   "token": {
-    "tokenName": "BNB",
+    "baseTokenName": "NTRN",
+    "tokenName": "ATOM",
     "tokenDecimals": 18,
-    "lsdTokenName": "rBNB",
-    "supportChains": ["BSC"],
-    "tokenStandard": "BEP20",
-    "tokenChainName": "BSC Chain",
-    "lsdTokenIconUri": "https://cdn.stafi.io/rtoken/logo/rBNB.png",
+    "lsdTokenName": "rATOM",
+    "supportChains": ["Neutron", "Carbon"],
+    "tokenStandard": "Neutron",
+    "tokenChainName": "Neutron Chain",
     "tokenImg": "/images/token/token_green.svg",
     "lsdTokenImg": "/images/token/lsdToken.svg",
-    "chainImg": "/images/bsc_chain.svg"
+    "chainImg": "/images/neutron_chain.png"
   },
   "unstake": {
-    "lockTipLink": "https://docs.stafi.io/stakingbnb/#how-to-unstake"
+    "lockTipLink": "https://docs.stafi.io/stakingatom/#how-to-unstake"
   },
   "apr": 5,
   "needRelayFee": true,
+  "estStakeFee": 0.005,
+  "estUnstakeFee": 0.01,
+  "estWithdrawFee": 0.005,
   "detailedInfo": {
     "audit": {
       "nameList": ["Blocksec"],
@@ -50,12 +53,12 @@
         },
         {
           "type": "text",
-          "content": "rBNB liquid staking rewards are mainly decided by the BSC chain's staking APR, delegation strategy and the original validator's slash risks."
+          "content": "rATOM liquid staking rewards are mainly decided by the BSC chain's staking APR, delegation strategy and the original validator's slash risks."
         }
       ]
     },
     {
-      "title": "How to calculate rBNB exchange rate?",
+      "title": "How to calculate rATOM exchange rate?",
       "contents": [
         {
           "type": "text",
@@ -87,7 +90,7 @@
       "link": "https://dune.com/stafi-analysis/stafi"
     },
     {
-      "name": "rBNB Listing",
+      "name": "rATOM Listing",
       "link": "https://docs.stafi.io/"
     }
   ],
@@ -109,5 +112,5 @@
       "link": "https://t.me/stafi_protocol"
     }
   ],
-  "tokenPriceUrl": "https://api.coingecko.com/api/v3/simple/price?ids=binancecoin&vs_currencies=usd"
+  "tokenPriceUrl": "https://api.coingecko.com/api/v3/simple/price?ids=cosmos,neutron-3&vs_currencies=usd"
 }

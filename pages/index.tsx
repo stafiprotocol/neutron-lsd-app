@@ -14,7 +14,6 @@ import cooperationIcon from "public/images/cooperation.svg";
 import { useMemo } from "react";
 import { openLink } from "utils/commonUtils";
 import { formatNumber } from "utils/numberUtils";
-import { addLsdTokenToMetaMask } from "utils/web3Utils";
 import { getLsdTokenIcon } from "utils/iconUtils";
 import {
   IFaqItem,
@@ -30,18 +29,15 @@ import {
 import { StakePage } from "components/staking/StakePage";
 import { useBalance } from "hooks/useBalance";
 import { useLsdTokenRate } from "hooks/useLsdTokenRate";
-import { useWalletAccount } from "hooks/useWalletAccount";
 import { useApr } from "hooks/useApr";
 import { useWithdrawInfo } from "hooks/useWithdrawInfo";
-import { getEvmChainId } from "config/env";
+import { neutronChainConfig } from "config/chain";
 
 const TokenPage = () => {
   const router = useRouter();
   const { apr } = useApr();
 
   const { withdrawInfo } = useWithdrawInfo();
-
-  const { metaMaskAccount, metaMaskChainId } = useWalletAccount();
 
   const { lsdBalance } = useBalance();
   const rate = useLsdTokenRate();
@@ -68,17 +64,14 @@ const TokenPage = () => {
     return "stake";
   }, [router.query]);
 
-  const isWrongMetaMaskNetwork = useMemo(() => {
-    return Number(metaMaskChainId) !== getEvmChainId();
-  }, [metaMaskChainId]);
-
   const showWithdrawTab = useMemo(() => {
+    // return true;
     return (
-      !isWrongMetaMaskNetwork &&
-      !isNaN(Number(withdrawInfo.overallAmount)) &&
-      Number(withdrawInfo.overallAmount) > 0
+      (!isNaN(Number(withdrawInfo.overallAmount)) &&
+        Number(withdrawInfo.overallAmount) > 0) ||
+      router.query.tab === "withdraw"
     );
-  }, [withdrawInfo, isWrongMetaMaskNetwork]);
+  }, [withdrawInfo, router.query.tab]);
 
   const updateTab = (tab: string) => {
     router.replace({
@@ -171,29 +164,15 @@ const TokenPage = () => {
                   </div>
                 </CustomTag>
               </div>
-
-              <div
-                className="ml-[.24rem] flex items-center cursor-pointer"
-                onClick={() => {
-                  addLsdTokenToMetaMask();
-                }}
-              >
-                <div className="text-color-link text-[.14rem]">
-                  Add {getLsdTokenName()} to Wallet
-                </div>
-
-                <span className="ml-[.06rem] flex items-center">
-                  <Icomoon icon="share" size=".12rem" />
-                </span>
-              </div>
             </div>
 
             <div className="mt-[.04rem] text-color-text2 text-[.16rem] scale-75 origin-bottom-left">
-              On {getSupportChains().join(", ")} Chains
+              On {getSupportChains().join(", ")} Chain
+              {getSupportChains().length > 1 && "s"}
             </div>
           </div>
 
-          {metaMaskAccount && (
+          {neutronChainConfig && (
             <div className="ml-auto mr-[.56rem] flex flex-col justify-center items-end">
               <div className="text-[.34rem] font-[700] text-color-text1">
                 {formatNumber(lsdBalance)}

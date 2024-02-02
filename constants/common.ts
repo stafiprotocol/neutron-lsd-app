@@ -1,6 +1,7 @@
 export const COMMON_ERROR_MESSAGE =
   "Something went wrong, please try again later";
 export const CANCELLED_MESSAGE = "Cancelled";
+export const WALLET_NOT_INSTALLED_MESSAGE = "Keplr not installed";
 export const REJECTED_MESSAGE = "Transaction rejected";
 export const TRANSACTION_FAILED_MESSAGE = "Transaction failed";
 export const CONNECTION_ERROR_MESSAGE = "Connection Error";
@@ -10,6 +11,7 @@ export const NO_ENOUGH_FEE_MESSAGE = "No enough fee in your account";
 export const NETWORK_ERR_MESSAGE = "Network exception, please try again later.";
 export const CANCELLED_ERR_MESSAGE1 = "User rejected the transaction";
 export const CANCELLED_ERR_MESSAGE2 = "User rejected the request";
+export const KEPLR_ERROR_REJECT = "Request rejected";
 
 export const PAGE_SIZE = 10;
 

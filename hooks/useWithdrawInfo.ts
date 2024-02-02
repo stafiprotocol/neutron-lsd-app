@@ -4,7 +4,6 @@ import { updateLsdTokenUserWithdrawInfo } from "redux/reducers/TokenSlice";
 import { RootState } from "redux/store";
 import { useAppDispatch, useAppSelector } from "./common";
 import { useAppSlice } from "./selector";
-import { useWalletAccount } from "./useWalletAccount";
 
 export function useWithdrawInfo() {
   const dispatch = useAppDispatch();
@@ -16,8 +15,6 @@ export function useWithdrawInfo() {
     };
   });
 
-  const { metaMaskAccount } = useWalletAccount();
-
   const { withdrawInfo } = useAppSelector((state: RootState) => {
     return {
       withdrawInfo: state.token.withdrawInfo,
@@ -28,7 +25,7 @@ export function useWithdrawInfo() {
     if (!updateFlag) return;
     dispatch(updateLsdTokenUnbondingDuration());
     dispatch(updateLsdTokenUserWithdrawInfo());
-  }, [dispatch, updateFlag, unbondingDuration, metaMaskAccount]);
+  }, [dispatch, updateFlag, unbondingDuration]);
 
   return { withdrawInfo };
 }

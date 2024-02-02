@@ -1,6 +1,7 @@
 import {
   CANCELLED_ERR_MESSAGE1,
   CANCELLED_ERR_MESSAGE2,
+  KEPLR_ERROR_REJECT,
 } from "constants/common";
 
 /**
@@ -49,10 +50,10 @@ export function isEmptyValue(value: string | number | undefined | null) {
   return false;
 }
 
-export const isMetaMaskCancelError = (err: any) => {
-  return (
-    err.code === 4001 ||
-    err.message.indexOf(CANCELLED_ERR_MESSAGE1) >= 0 ||
-    err.message.indexOf(CANCELLED_ERR_MESSAGE2) >= 0
-  );
+export const isKeplrCancelError = (err: any) => {
+  return (err as Error).message === KEPLR_ERROR_REJECT;
+};
+
+export const isKeplrInstalled = () => {
+  return (window as any).getOfflineSignerAuto && (window as any).keplr;
 };

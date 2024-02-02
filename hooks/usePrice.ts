@@ -1,18 +1,21 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getTokenPriceUrl } from "utils/configUtils";
 import { useAppSlice } from "./selector";
 import { useAppDispatch, useAppSelector } from "./common";
-import { setTokenPrice } from "redux/reducers/TokenSlice";
+import { setNtrnPrice, setTokenPrice } from "redux/reducers/TokenSlice";
 import { RootState } from "redux/store";
 import dayjs from "dayjs";
+import { useDebouncedEffect } from "./useDebouncedEffect";
 
 export function usePrice() {
+  const updateTimestampRef = useRef<number>(0);
   const { updateFlag } = useAppSlice();
   const dispatch = useAppDispatch();
 
-  const { tokenPrice } = useAppSelector((state: RootState) => {
+  const { tokenPrice, ntrnPrice } = useAppSelector((state: RootState) => {
     return {
       tokenPrice: state.token.tokenPrice,
+      ntrnPrice: state.token.ntrnPrice,
     };
   });
 
@@ -38,7 +41,8 @@ export function usePrice() {
 
   const fetchTokenPrice = useCallback(async () => {
     const currentTImestamp = dayjs().unix();
-    if (currentTImestamp - updateFlag < 30) return; // 30s
+    if (currentTImestamp - updateTimestampRef.current < 30) return; // 30s
+    updateTimestampRef.current = currentTImestamp;
     try {
       const response = await fetch(getTokenPriceUrl(), {
         method: "GET",
@@ -48,19 +52,25 @@ export function usePrice() {
       });
       const resJson = await response.json();
       if (resJson) {
-        const { usd } = resJson.binancecoin;
+        const { usd } = resJson.cosmos;
         dispatch(setTokenPrice(usd));
+        const { usd: ntrnUsd } = resJson["neutron-3"];
+        dispatch(setNtrnPrice(ntrnUsd));
       }
     } catch (err: any) {}
-  }, [updateFlag]);
+  }, [dispatch]);
 
-  useEffect(() => {
-    fetchGasPrice();
-    fetchTokenPrice();
-  }, [updateFlag]);
+  useDebouncedEffect(
+    () => {
+      fetchTokenPrice();
+    },
+    [fetchTokenPrice],
+    1500
+  );
 
   return {
     gasPrice,
+    ntrnPrice,
     tokenPrice,
   };
 }
