@@ -1,1 +1,1 @@
-# evm-lsd-app
+# neutron-lsd-app
