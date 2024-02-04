@@ -53,7 +53,7 @@
         },
         {
           "type": "text",
-          "content": "rATOM liquid staking rewards are mainly decided by the BSC chain's staking APR, delegation strategy and the original validator's slash risks."
+          "content": "rATOM liquid staking rewards are mainly decided by the Cosmos chain's staking APR, delegation strategy and the original validator's slash risks."
         }
       ]
     },
@@ -62,7 +62,7 @@
       "contents": [
         {
           "type": "text",
-          "content": "rBNB exchange rate is recording how many BNBs could be unstaked with 1 rBNB token. It will start from 1 and gradually increase along with the staking rewards generated continuously.\n"
+          "content": "rATOM exchange rate is recording how many ATOMs could be unstaked with 1 rATOM token. It will start from 1 and gradually increase along with the staking rewards generated continuously.\n"
         },
         {
           "type": "link",

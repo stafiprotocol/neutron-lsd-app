@@ -133,9 +133,13 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
       getStakeManagerContract()
     );
 
+    const beginEra = Math.max(0, currentEra - numEras);
+
+    console.log({ beginEra });
+    console.log({ currentEra });
     const beginRateRes = await stakeManagerClient.queryEraRate({
       pool_addr: getPoolAddress(),
-      era: currentEra - numEras,
+      era: beginEra,
     });
 
     const endRateRes = await stakeManagerClient.queryEraRate({
@@ -163,6 +167,7 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
 
     dispatch(setApr(apr));
   } catch (err: any) {
+    console.error({ err });
     dispatch(setApr(apr));
   }
 };
