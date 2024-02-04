@@ -135,8 +135,8 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
 
     const beginEra = Math.max(0, currentEra - numEras);
 
-    console.log({ beginEra });
-    console.log({ currentEra });
+    // console.log({ beginEra });
+    // console.log({ currentEra });
     const beginRateRes = await stakeManagerClient.queryEraRate({
       pool_addr: getPoolAddress(),
       era: beginEra,
@@ -147,8 +147,8 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
       era: currentEra,
     });
 
-    console.log({ beginRateRes });
-    console.log({ endRateRes });
+    // console.log({ beginRateRes });
+    // console.log({ endRateRes });
 
     const beginRate = Number(beginRateRes);
     const endRate = Number(endRateRes);
