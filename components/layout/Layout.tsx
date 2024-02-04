@@ -15,6 +15,8 @@ import { StakeLoadingSidebar } from "components/modal/StakeLoadingSidebar";
 import { UnstakeLoadingSidebar } from "components/modal/UnstakeLoadingSidebar";
 import { WithdrawLoadingSidebar } from "components/modal/WithdrawLoadingSidebar";
 import { getAppTitle } from "utils/configUtils";
+import { RedelegateLoadingModal } from "components/modal/RedelegateLoadingModal";
+import { RedelegateLoadingSidebar } from "components/modal/RedelegateLoadingSidebar";
 
 const Navbar = dynamic(() => import("./Navbar"), { ssr: false });
 
@@ -66,13 +68,18 @@ export const Layout = (props: React.PropsWithChildren) => {
         </main>
 
         <StakeLoadingModal />
+
         <UnstakeLoadingModal />
+
         <WithdrawLoadingModal />
+
+        <RedelegateLoadingModal />
 
         <div className="fixed right-0 top-[4rem]">
           <StakeLoadingSidebar />
           <UnstakeLoadingSidebar />
           <WithdrawLoadingSidebar />
+          <RedelegateLoadingSidebar />
         </div>
       </div>
     </MyLayoutContext.Provider>

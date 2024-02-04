@@ -60,6 +60,45 @@ export interface WithdrawLoadingParams {
   relayFee?: string;
 }
 
+export interface LoadingProgressDetailItem {
+  totalStatus?: "loading" | "success" | "error";
+  broadcastStatus?: "loading" | "success" | "error";
+  packStatus?: "loading" | "success" | "error";
+  finalizeStatus?: "loading" | "success" | "error";
+  txHash?: string;
+}
+
+interface RedelegateLoadingProgressDetail {
+  tokenizeShares?: LoadingProgressDetailItem;
+  sending?: LoadingProgressDetailItem;
+  minting?: LoadingProgressDetailItem;
+}
+
+export interface RedelegateLoadingParams {
+  modalVisible?: boolean;
+  noticeUuid?: string;
+  type?: "staked" | "lsm";
+  steps?: string[];
+  status?: "loading" | "success" | "error";
+  displayMsg?: string;
+  currentStep?: "tokenizeShares" | "sending" | "minting";
+  cosmosTxMessagesJSON?: string;
+  chainId?: string;
+  amount?: string;
+  willReceiveAmount?: string;
+  newRTokenBalance?: string;
+  scanUrl?: string;
+  prepareTxHash?: string;
+  transferTxHash?: string;
+  progressDetail?: RedelegateLoadingProgressDetail;
+  targetAddress?: string;
+  blockHash?: string;
+  poolPubKey?: string;
+  customTitle?: string;
+  customMsg?: string;
+  isMintDeposit?: boolean;
+}
+
 export interface AppState {
   darkMode: boolean;
   collapseOpenId: string | undefined;
@@ -71,6 +110,7 @@ export interface AppState {
   stakeLoadingParams: StakeLoadingParams | undefined;
   unstakeLoadingParams: UnstakeLoadingParams | undefined;
   withdrawLoadingParams: WithdrawLoadingParams | undefined;
+  redelegateLoadingParams: RedelegateLoadingParams | undefined;
 }
 
 const initialState: AppState = {
@@ -84,6 +124,7 @@ const initialState: AppState = {
   stakeLoadingParams: undefined,
   unstakeLoadingParams: undefined,
   withdrawLoadingParams: undefined,
+  redelegateLoadingParams: undefined,
 };
 
 export const appSlice = createSlice({
@@ -137,6 +178,12 @@ export const appSlice = createSlice({
     ) => {
       state.withdrawLoadingParams = action.payload;
     },
+    setRedelegateLoadingParams: (
+      state: AppState,
+      action: PayloadAction<RedelegateLoadingParams | undefined>
+    ) => {
+      state.redelegateLoadingParams = action.payload;
+    },
   },
 });
 
@@ -151,6 +198,7 @@ export const {
   setStakeLoadingParams,
   setUnstakeLoadingParams,
   setWithdrawLoadingParams,
+  setRedelegateLoadingParams,
 } = appSlice.actions;
 
 export default appSlice.reducer;
@@ -216,6 +264,36 @@ export const updateWithdrawLoadingParams =
     }
 
     dispatch(setWithdrawLoadingParams(newParams));
+    cb && cb(newParams);
+  };
+
+export const resetRedelegateLoadingParams =
+  (redelegateLoadingParams: RedelegateLoadingParams | undefined): AppThunk =>
+  async (dispatch, getState) => {
+    dispatch(setRedelegateLoadingParams(redelegateLoadingParams));
+  };
+
+export const updateRedelegateLoadingParams =
+  (
+    redelegateLoadingParams: RedelegateLoadingParams,
+    cb?: (newParams: RedelegateLoadingParams | undefined) => void
+  ): AppThunk =>
+  async (dispatch, getState) => {
+    let newParams;
+    if (!redelegateLoadingParams) {
+      newParams = undefined;
+    } else {
+      newParams = {
+        ...getState().app.redelegateLoadingParams,
+        ...redelegateLoadingParams,
+        progressDetail: {
+          ...getState().app.redelegateLoadingParams?.progressDetail,
+          ...redelegateLoadingParams.progressDetail,
+        },
+      };
+    }
+
+    dispatch(setRedelegateLoadingParams(newParams));
     cb && cb(newParams);
   };
 

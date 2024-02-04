@@ -8,5 +8,5 @@ export const neutronChainConfig: ChainConfig = isDev()
   : chainProdConfig.neutron;
 
 export const lsdTokenChainConfig: ChainConfig = isDev()
-  ? chainDevConfig.lsdToken
-  : chainProdConfig.lsdToken;
+  ? chainDevConfig.lsdTokenChain
+  : chainProdConfig.lsdTokenChain;

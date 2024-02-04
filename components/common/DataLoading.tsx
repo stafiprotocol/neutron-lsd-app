@@ -1,19 +1,26 @@
 import { Skeleton } from "@mui/material";
+import classNames from "classnames";
 import { useAppSelector } from "hooks/common";
 import { RootState } from "redux/store";
 
 interface Props {
   height: string;
+  width?: string;
 }
 
 export const DataLoading = (props: Props) => {
-  const { height } = props;
+  const { height, width } = props;
   const { darkMode } = useAppSelector((state: RootState) => {
     return { darkMode: state.app.darkMode };
   });
 
   return (
-    <div className="min-w-[0.5rem]">
+    <div
+      className={classNames(width ? "" : "min-w-[0.5rem]")}
+      style={{
+        ...(width ? { width: width } : {}),
+      }}
+    >
       <Skeleton
         variant="rounded"
         animation="pulse"

@@ -143,9 +143,17 @@ export const NoticeItem = (props: {
           )} ${getLsdTokenName()} from LSD Pool Contract to your wallet.`;
         }
       }
-      if (notice.type === "Withdraw" || notice.type === "Validator Withdraw") {
+      if (notice.type === "Withdraw") {
         data = notice.data as NoticeWithdrawData;
         return `Withdraw ${formatNumber(data.tokenAmount)} ${getTokenName()}.`;
+      }
+      if (notice.type === "Redelegate") {
+        data = notice.data as NoticeStakeData;
+        return `liquid stake ${formatNumber(data.amount)} ${
+          notice.redelegateLoadingParams?.type === "lsm" ? "LSM" : "Staked"
+        } ${getTokenName()} from your wallet to StaFi Pool Contract, and receive ${formatNumber(
+          data.willReceiveAmount
+        )} ${getLsdTokenName()}.`;
       }
     } catch (err: unknown) {}
 

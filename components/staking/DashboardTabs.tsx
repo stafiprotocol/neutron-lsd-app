@@ -1,16 +1,19 @@
 import classNames from "classnames";
+import { lsdTokenChainConfig } from "config/chain";
 import { useRouter } from "next/router";
 import { useMemo } from "react";
+import { supportLiquidStake } from "utils/configUtils";
 
 interface Props {
-  selectedTab: "stake" | "unstake" | "withdraw";
-  onChangeTab: (tab: "stake" | "unstake" | "withdraw") => void;
+  selectedTab: "stake" | "unstake" | "liquidStake" | "withdraw";
+  onChangeTab: (tab: "stake" | "unstake" | "liquidStake" | "withdraw") => void;
   showWithdrawTab?: boolean;
+  showLiquidStakeTab?: boolean;
 }
 
 export const DashboardTabs = (props: Props) => {
   const router = useRouter();
-  const { showWithdrawTab } = props;
+  const { showWithdrawTab, showLiquidStakeTab } = props;
 
   const showWithdraw = useMemo(() => {
     return showWithdrawTab || router.query.tab === "withdraw";
@@ -19,10 +22,12 @@ export const DashboardTabs = (props: Props) => {
   return (
     <div
       className={classNames(
-        "p-[.04rem] h-[.42rem] grid items-stretch bg-color-bg2 rounded-[.3rem] w-[2.2rem]"
+        "p-[.04rem] h-[.42rem] grid items-stretch bg-color-bg2 rounded-[.3rem]",
+        showLiquidStakeTab && showWithdraw ? "w-[4rem]" : "w-[2.2rem]"
       )}
       style={{
-        gridTemplateColumns: "40% 60%",
+        gridTemplateColumns:
+          showLiquidStakeTab && showWithdraw ? "25% 45% 30%" : "40% 60%",
       }}
     >
       <div
@@ -36,6 +41,20 @@ export const DashboardTabs = (props: Props) => {
       >
         Stake
       </div>
+
+      {showLiquidStakeTab && (
+        <div
+          className={classNames(
+            "cursor-pointer flex items-center justify-center text-[.16rem] rounded-[.3rem]",
+            props.selectedTab === "liquidStake"
+              ? "text-color-highlight bg-color-highlight"
+              : "text-color-text1"
+          )}
+          onClick={() => props.onChangeTab("liquidStake")}
+        >
+          Liquid Stake
+        </div>
+      )}
 
       {showWithdraw && (
         <div className="flex items-stretch">

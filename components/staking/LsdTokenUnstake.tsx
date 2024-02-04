@@ -22,8 +22,6 @@ import { connectKeplrAccount } from "redux/reducers/WalletSlice";
 import { RootState } from "redux/store";
 import { isEmptyValue, openLink } from "utils/commonUtils";
 import {
-  getBaseTokenName,
-  getEstUnstakeFee,
   getLsdTokenName,
   getTokenName,
   getUnstakeTipLink,
@@ -34,6 +32,7 @@ import { formatLargeAmount, formatNumber } from "utils/numberUtils";
 import { CustomButton } from "../common/CustomButton";
 import { CustomNumberInput } from "../common/CustomNumberInput";
 import { DataLoading } from "../common/DataLoading";
+import { DEFAULT_UNSTAKE_FEE } from "constants/common";
 
 export const LsdTokenUnstake = () => {
   const router = useRouter();
@@ -42,10 +41,9 @@ export const LsdTokenUnstake = () => {
 
   const neutronAccount = useCosmosChainAccount(neutronChainConfig.chainId);
   const lsdTokenAccount = useCosmosChainAccount(lsdTokenChainConfig.chainId);
-  const { balance } = useBalance();
   const lsdTokenRate = useLsdTokenRate();
 
-  const { lsdBalance } = useBalance();
+  const { lsdBalance, balance } = useBalance();
 
   const { apr } = useApr();
   const { ntrnPrice, tokenPrice } = usePrice();
@@ -86,7 +84,7 @@ export const LsdTokenUnstake = () => {
   }, [unstakeAmount, tokenPrice, lsdTokenRate]);
 
   const estimateFee = useMemo(() => {
-    return getEstUnstakeFee();
+    return DEFAULT_UNSTAKE_FEE;
   }, []);
 
   const transactionCost = useMemo(() => {
@@ -161,16 +159,6 @@ export const LsdTokenUnstake = () => {
     neutronAccount,
     lsdTokenAccount,
   ]);
-
-  const newRTokenBalance = useMemo(() => {
-    if (isNaN(Number(availableBalance))) {
-      return "--";
-    }
-    if (isNaN(Number(unstakeAmount))) {
-      return "--";
-    }
-    return Number(availableBalance) - Number(unstakeAmount) + "";
-  }, [availableBalance, unstakeAmount]);
 
   const resetState = () => {
     setUnstakeAmount("");
@@ -513,7 +501,7 @@ export const LsdTokenUnstake = () => {
               ) : (
                 formatNumber(estimateFee, { decimals: 4 })
               )}{" "}
-              {getBaseTokenName()}
+              NTRN
             </div>
           </div>
           <div className="h-[1px] bg-color-popoverDivider my-[.1rem]" />
@@ -525,7 +513,7 @@ export const LsdTokenUnstake = () => {
               ) : (
                 formatNumber(transactionCost, { decimals: 4 })
               )}{" "}
-              {getBaseTokenName()}
+              NTRN
             </div>
           </div>
           <div className="mt-[.16rem] text-right flex items-center justify-end mb-[.16rem]">

@@ -6,10 +6,11 @@ import { useMemo } from "react";
 import { WithdrawInfo, handleTokenWithdraw } from "redux/reducers/TokenSlice";
 import { connectKeplrAccount } from "redux/reducers/WalletSlice";
 import { RootState } from "redux/store";
-import { getEstWithdrawFee, getTokenName } from "utils/configUtils";
+import { getTokenName } from "utils/configUtils";
 import { amountToChain, formatNumber } from "utils/numberUtils";
 import { formatWithdrawRemaingTime } from "utils/timeUtils";
 import { CustomButton } from "../common/CustomButton";
+import { DEFAULT_WITHDRAW_FEE } from "constants/common";
 
 interface Props {
   withdrawInfo: WithdrawInfo;
@@ -52,7 +53,7 @@ export const WithdrawUnstaked = (props: Props) => {
     if (
       !ntrnBalance ||
       Number(ntrnBalance.amount) <
-        Number(amountToChain(getEstWithdrawFee() + ""))
+        Number(amountToChain(DEFAULT_WITHDRAW_FEE + ""))
     ) {
       return true;
     }

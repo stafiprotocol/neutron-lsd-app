@@ -5,7 +5,10 @@ import {
   STORAGE_KEY_UNREAD_NOTICE,
 } from "./storageUtils";
 import dayjs from "dayjs";
-import { StakeLoadingParams } from "redux/reducers/AppSlice";
+import {
+  RedelegateLoadingParams,
+  StakeLoadingParams,
+} from "redux/reducers/AppSlice";
 
 export interface LocalNotice {
   id: string;
@@ -15,10 +18,11 @@ export interface LocalNotice {
   txDetail?: NoticeTxDetail;
   scanUrl?: string;
   stakeLoadingParams?: StakeLoadingParams | undefined;
+  redelegateLoadingParams?: RedelegateLoadingParams | undefined;
   timestamp?: number;
 }
 
-export type NoticeType = "Stake" | "Unstake" | "Withdraw";
+export type NoticeType = "Stake" | "Unstake" | "Withdraw" | "Redelegate";
 
 export type NoticeStatus = "Pending" | "Error" | "Cancelled" | "Confirmed";
 

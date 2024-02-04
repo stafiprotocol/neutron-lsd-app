@@ -1,19 +1,12 @@
 import appConfig from "config/appConf/app.json";
-
-export function getBaseTokenName() {
-  return appConfig.token.baseTokenName;
-}
+import { lsdTokenChainConfig, neutronChainConfig } from "config/chain";
 
 export function getTokenName() {
-  return appConfig.token.tokenName;
+  return lsdTokenChainConfig.coinDenom;
 }
 
 export function getLsdTokenName() {
-  return appConfig.token.lsdTokenName;
-}
-
-export function getTokenDecimals() {
-  return appConfig.token.tokenDecimals;
+  return lsdTokenChainConfig.lsdTokenName;
 }
 
 export function getAppTitle() {
@@ -21,15 +14,15 @@ export function getAppTitle() {
 }
 
 export function getSupportChains() {
-  return appConfig.token.supportChains;
+  return appConfig.chain.supportChains;
 }
 
 export function getTokenStandard() {
-  return appConfig.token.tokenStandard;
+  return appConfig.chain.tokenStandard;
 }
 
 export function getTokenChainName() {
-  return appConfig.token.tokenChainName;
+  return neutronChainConfig.chainName;
 }
 
 export function getDetailInfoListedIns() {
@@ -67,7 +60,7 @@ export function getTokenPriceUrl() {
 }
 
 export function getDefaultApr() {
-  return appConfig.apr;
+  return lsdTokenChainConfig.defaultApr;
 }
 
 export function getContactList() {
@@ -78,18 +71,6 @@ export function getExternalLinkList() {
   return appConfig.externalLinkList;
 }
 
-export function needRelayFee() {
-  return appConfig.needRelayFee;
-}
-
-export function getEstStakeFee() {
-  return appConfig.estStakeFee;
-}
-
-export function getEstUnstakeFee() {
-  return appConfig.estUnstakeFee;
-}
-
-export function getEstWithdrawFee() {
-  return appConfig.estWithdrawFee;
+export function supportLiquidStake() {
+  return lsdTokenChainConfig.coinDenom === "ATOM";
 }

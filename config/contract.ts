@@ -3,16 +3,6 @@ import appProdConfig from "./appConf/prod.json";
 import { isDev } from "./env";
 
 /**
- * get neutron lsdToken contract address
- */
-export function getLsdTokenContract() {
-  if (isDev()) {
-    return appDevConfig.contracts.lsdToken.address;
-  }
-  return appProdConfig.contracts.lsdToken.address;
-}
-
-/**
  * get neutron stakeManager contract address
  */
 export function getStakeManagerContract() {

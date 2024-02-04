@@ -113,10 +113,10 @@ export function stakeAmountToBn(
 }
 
 export function amountToChain(
-  input: string | number,
+  input: string | number | undefined,
   decimals: number = 6
 ): string {
-  if (isNaN(Number(input))) {
+  if (isNaN(Number(input)) || input === undefined) {
     return "--";
   }
   let factor = Math.pow(10, decimals) + "";

@@ -1,13 +1,10 @@
 {
   "appTitle": "Neutron LSD App",
-  "token": {
-    "baseTokenName": "NTRN",
-    "tokenName": "ATOM",
-    "tokenDecimals": 18,
-    "lsdTokenName": "rATOM",
-    "supportChains": ["Neutron", "Carbon"],
-    "tokenStandard": "Neutron",
-    "tokenChainName": "Neutron Chain",
+  "chain": {
+    "supportChains": ["Neutron"],
+    "tokenStandard": "Neutron"
+  },
+  "icons": {
     "tokenImg": "/images/token/token_green.svg",
     "lsdTokenImg": "/images/token/lsdToken.svg",
     "chainImg": "/images/neutron_chain.png"
@@ -15,11 +12,6 @@
   "unstake": {
     "lockTipLink": "https://docs.stafi.io/stakingatom/#how-to-unstake"
   },
-  "apr": 5,
-  "needRelayFee": true,
-  "estStakeFee": 0.005,
-  "estUnstakeFee": 0.01,
-  "estWithdrawFee": 0.005,
   "detailedInfo": {
     "audit": {
       "nameList": ["Blocksec"],

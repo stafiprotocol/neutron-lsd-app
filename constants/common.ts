@@ -12,6 +12,8 @@ export const NETWORK_ERR_MESSAGE = "Network exception, please try again later.";
 export const CANCELLED_ERR_MESSAGE1 = "User rejected the transaction";
 export const CANCELLED_ERR_MESSAGE2 = "User rejected the request";
 export const KEPLR_ERROR_REJECT = "Request rejected";
+export const TOAST_MESSAGE_INCREASE_GAS =
+  "Something went wrong, please increase the gas and try again!";
 
 export const PAGE_SIZE = 10;
 
@@ -36,3 +38,6 @@ export const LOADING_MESSAGE_APPROVE_PHANTOM_CREATE_TOKEN =
   "Please approve create token account request in Phantom wallet";
 
 export const DEFAULT_MIN_STAKE_AMOUNT = 0.005;
+export const DEFAULT_STAKE_FEE = 0.005;
+export const DEFAULT_UNSTAKE_FEE = 0.01;
+export const DEFAULT_WITHDRAW_FEE = 0.005;

@@ -1,14 +1,5 @@
 {
-  "chain": {
-    "id": 97,
-    "name": "BSC Testnet"
-  },
-  "rpc": "https://data-seed-prebsc-1-s1.binance.org:8545",
-  "explorer": "https://testnet.bscscan.com",
   "contracts": {
-    "lsdToken": {
-      "address": "neutron1lynzj6ym0y4ne69cm4m3zhmdyuql9clapcdx6k8kd3grxl494g0quy4xjq"
-    },
     "stakeManager": {
       "address": "neutron1humx752uqvxn2jfenh5524md0ta23usm8m2lesaxw47fps28yx5syztnk5"
     },

@@ -1,24 +1,22 @@
-import { ChainConfig, Coin, CosmosAccount } from "interfaces/common";
-import { saveCosmosNetworkAllowedFlag } from "./storageUtils";
-import { timeout } from "./commonUtils";
 import { CosmWasmClient } from "@cosmjs/cosmwasm-stargate";
-import { neutronChainConfig } from "config/chain";
-import { StargateClient } from "@cosmjs/stargate";
 import {
   connectAtomjs,
   getKeplrAccount,
   queryAccountBalances,
+  queryChannelClientState,
+  queryLatestBlock,
 } from "@stafihub/apps-wallet";
 import { LsdToken, StakeManager } from "codegen/neutron";
-import {
-  getLsdTokenContract,
-  getPoolAddress,
-  getStakeManagerContract,
-} from "config/contract";
-import { chainAmountToHuman } from "./numberUtils";
+import { neutronChainConfig } from "config/chain";
+import { getPoolAddress, getStakeManagerContract } from "config/contract";
 import { COMMON_ERROR_MESSAGE } from "constants/common";
+import { ChainConfig, Coin, CosmosAccount } from "interfaces/common";
+import { chainAmountToHuman } from "./numberUtils";
+import { saveCosmosNetworkAllowedFlag } from "./storageUtils";
+import { Client as StakeManagerClient } from "codegen/neutron/stakeManager";
 
 let neutronWasmClient: CosmWasmClient;
+let stakeManagerClient: StakeManagerClient;
 
 export async function getNeutronWasmClient() {
   try {
@@ -32,6 +30,22 @@ export async function getNeutronWasmClient() {
   }
 
   return neutronWasmClient;
+}
+
+export async function getStakeManagerClient() {
+  try {
+    if (!stakeManagerClient) {
+      const wasmClient = await getNeutronWasmClient();
+      stakeManagerClient = new StakeManager.Client(
+        wasmClient,
+        getStakeManagerContract()
+      );
+    }
+  } catch (err: any) {
+    console.error(err);
+  }
+
+  return stakeManagerClient;
 }
 
 export const _connectKeplr = async (chainConfig: ChainConfig) => {
@@ -83,9 +97,11 @@ export async function getNeutronLsdTokenBalance(
   try {
     const wasmClient = await getNeutronWasmClient();
 
+    const poolInfo = await getNeutronPoolInfo();
+
     const lsdTokenClient = new LsdToken.Client(
       wasmClient,
-      getLsdTokenContract()
+      poolInfo?.lsd_token || ""
     );
     const userBalanceInChain = await lsdTokenClient.queryBalance({
       address: neutronAddress,
@@ -101,12 +117,7 @@ export async function getNeutronLsdTokenBalance(
 
 export async function getNeutronPoolInfo() {
   try {
-    const cosmWasmClient = await getNeutronWasmClient();
-
-    const stakeManagerClient = new StakeManager.Client(
-      cosmWasmClient,
-      getStakeManagerContract()
-    );
+    const stakeManagerClient = await getStakeManagerClient();
 
     const poolInfo = await stakeManagerClient.queryPoolInfo({
       pool_addr: getPoolAddress(),
@@ -125,4 +136,49 @@ export function getCosmosTxErrorMsg(response: any) {
     return COMMON_ERROR_MESSAGE;
   }
   return JSON.stringify(response.events);
+}
+
+export async function getWasmIbcTransferMessage(
+  srcChainConfig: ChainConfig,
+  sender: string,
+  receiver: string,
+  amount: string,
+  sourcePort: string,
+  sourceChannel: string,
+  denom: string,
+  memo?: string
+) {
+  console.log({ srcChainConfig });
+
+  const clientState = await queryChannelClientState(
+    srcChainConfig,
+    sourceChannel
+  );
+
+  const latestBlockResult = await queryLatestBlock(srcChainConfig);
+  const latestBlockNanoSeconds = (
+    Number(latestBlockResult?.block?.header?.time?.getTime()) * 1000000
+  ).toFixed(0);
+
+  const message = {
+    typeUrl: "/ibc.applications.transfer.v1.MsgTransfer",
+    value: {
+      sourcePort,
+      sourceChannel,
+      token: {
+        denom,
+        amount,
+      },
+      sender,
+      receiver,
+      timeoutHeight: {
+        revisionNumber: clientState?.latestHeight?.revisionNumber,
+        revisionHeight: clientState?.latestHeight?.revisionHeight?.add(100000),
+      },
+      timeoutTimestamp: Number(latestBlockNanoSeconds) + 600000000000000 + "",
+      memo,
+    },
+  };
+
+  return message;
 }

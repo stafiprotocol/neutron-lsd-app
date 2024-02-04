@@ -2,7 +2,7 @@ import classNames from "classnames";
 import { BubblesLoading } from "components/common/BubblesLoading";
 import { Icomoon } from "components/icon/Icomoon";
 import { lsdTokenChainConfig, neutronChainConfig } from "config/chain";
-import { DEFAULT_MIN_STAKE_AMOUNT } from "constants/common";
+import { DEFAULT_MIN_STAKE_AMOUNT, DEFAULT_STAKE_FEE } from "constants/common";
 import { useAppDispatch, useAppSelector } from "hooks/common";
 import { useAppSlice } from "hooks/selector";
 import { useApr } from "hooks/useApr";
@@ -20,11 +20,7 @@ import { handleTokenStake } from "redux/reducers/TokenSlice";
 import { connectKeplrAccount } from "redux/reducers/WalletSlice";
 import { RootState } from "redux/store";
 import { isEmptyValue } from "utils/commonUtils";
-import {
-  getEstStakeFee,
-  getLsdTokenName,
-  getTokenName,
-} from "utils/configUtils";
+import { getLsdTokenName, getTokenName } from "utils/configUtils";
 import { getTokenIcon } from "utils/iconUtils";
 import { formatLargeAmount, formatNumber } from "utils/numberUtils";
 import { CustomButton } from "../common/CustomButton";
@@ -51,7 +47,9 @@ export const LsdTokenStake = () => {
       return "--";
     }
     const reserveAmount = lsdTokenChainConfig.stakeReserveAmount || 0.05;
-    return Math.max(0, Number(balance) - reserveAmount - getEstStakeFee()) + "";
+    return (
+      Math.max(0, Number(balance) - reserveAmount - DEFAULT_STAKE_FEE) + ""
+    );
   }, [balance]);
 
   const { stakeLoading } = useAppSelector((state: RootState) => {
@@ -88,7 +86,7 @@ export const LsdTokenStake = () => {
   }, [stakeAmount, lsdTokenRate]);
 
   const estimateFee = useMemo(() => {
-    return getEstStakeFee();
+    return DEFAULT_STAKE_FEE;
   }, []);
 
   const transactionCost = useMemo(() => {

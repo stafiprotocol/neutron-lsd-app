@@ -10,11 +10,7 @@ import {
 } from "@stafihub/apps-wallet";
 import { LsdToken, StakeManager } from "codegen/neutron";
 import { lsdTokenChainConfig, neutronChainConfig } from "config/chain";
-import {
-  getLsdTokenContract,
-  getPoolAddress,
-  getStakeManagerContract,
-} from "config/contract";
+import { getPoolAddress, getStakeManagerContract } from "config/contract";
 import { getExplorerTxUrl } from "config/explorer";
 import {
   CANCELLED_MESSAGE,
@@ -24,7 +20,12 @@ import { CosmosAccountMap } from "interfaces/common";
 import { AppThunk } from "redux/store";
 import { isKeplrCancelError, timeout, uuid } from "utils/commonUtils";
 import { getTokenName } from "utils/configUtils";
-import { getCosmosTxErrorMsg, getNeutronWasmClient } from "utils/cosmosUtils";
+import {
+  getCosmosTxErrorMsg,
+  getNeutronPoolInfo,
+  getNeutronWasmClient,
+  getStakeManagerClient,
+} from "utils/cosmosUtils";
 import { LocalNotice } from "utils/noticeUtils";
 import { amountToChain, chainAmountToHuman } from "utils/numberUtils";
 import snackbarUtil from "utils/snackbarUtils";
@@ -41,6 +42,7 @@ import {
   updateWithdrawLoadingParams,
 } from "./AppSlice";
 import { updateCosmosAccounts } from "./WalletSlice";
+import { PoolInfo } from "codegen/neutron/stakeManager";
 
 export interface WithdrawInfo {
   overallAmount: string | undefined;
@@ -63,6 +65,7 @@ export interface TokenState {
   relayFee: RelayFee;
   tokenPrice: number | undefined;
   ntrnPrice: number | undefined;
+  neutronPoolInfo: PoolInfo | undefined;
 }
 
 const initialState: TokenState = {
@@ -81,6 +84,7 @@ const initialState: TokenState = {
   },
   tokenPrice: undefined,
   ntrnPrice: undefined,
+  neutronPoolInfo: undefined,
 };
 
 export const tokenSlice = createSlice({
@@ -120,6 +124,12 @@ export const tokenSlice = createSlice({
     setNtrnPrice: (state: TokenState, action: PayloadAction<number>) => {
       state.ntrnPrice = action.payload;
     },
+    setNeutronPoolInfo: (
+      state: TokenState,
+      action: PayloadAction<PoolInfo | undefined>
+    ) => {
+      state.neutronPoolInfo = action.payload;
+    },
   },
 });
 
@@ -131,6 +141,7 @@ export const {
   setRelayFee,
   setTokenPrice,
   setNtrnPrice,
+  setNeutronPoolInfo,
 } = tokenSlice.actions;
 
 export default tokenSlice.reducer;
@@ -202,11 +213,7 @@ export const updateLsdTokenUserWithdrawInfo =
     }
 
     try {
-      const cosmWasmClient = await getNeutronWasmClient();
-      const stakeManagerClient = new StakeManager.Client(
-        cosmWasmClient,
-        getStakeManagerContract()
-      );
+      const stakeManagerClient = await getStakeManagerClient();
 
       const poolInfo = await stakeManagerClient.queryPoolInfo({
         pool_addr: getPoolAddress(),
@@ -259,6 +266,15 @@ export const updateLsdTokenUserWithdrawInfo =
   };
 
 /**
+ * update user withdraw info
+ */
+export const updateNeutronPoolInfo =
+  (): AppThunk => async (dispatch, getState) => {
+    const poolInfo = await getNeutronPoolInfo();
+    dispatch(setNeutronPoolInfo(poolInfo));
+  };
+
+/**
  * stake token
  * @param stakeAmount stake token amount
  * @param willReceiveAmount will receive lsdToken amount
@@ -304,6 +320,12 @@ export const handleTokenStake =
         })
       );
 
+      const poolInfo = await getNeutronPoolInfo();
+      const lsdTokenContract = poolInfo?.lsd_token;
+      if (!lsdTokenContract) {
+        throw new Error("Lsd Token Contract Address not found");
+      }
+
       const chainAmount = amountToChain(stakeAmount);
 
       const memo = JSON.stringify({
@@ -322,7 +344,7 @@ export const handleTokenStake =
 
       const lsdTokenClient = new LsdToken.Client(
         cosmWasmClient,
-        getLsdTokenContract()
+        lsdTokenContract
       );
 
       const userOldBalanceInChain = await lsdTokenClient.queryBalance({
@@ -471,6 +493,12 @@ export const handleLsdTokenUnstake =
         })
       );
 
+      const poolInfo = await getNeutronPoolInfo();
+      const lsdTokenContract = poolInfo?.lsd_token;
+      if (!lsdTokenContract) {
+        throw new Error("Lsd Token Contract Address not found");
+      }
+
       const fee = {
         amount: [
           {
@@ -491,7 +519,7 @@ export const handleLsdTokenUnstake =
 
       const lsdTokenClient = new LsdToken.Client(
         signingCosmWasmClient,
-        getLsdTokenContract()
+        lsdTokenContract
       );
       const allowance = await lsdTokenClient.queryAllowance({
         owner: neutronAccount.bech32Address,
@@ -501,7 +529,7 @@ export const handleLsdTokenUnstake =
 
       if (Number(allowance.allowance) < Number(amountInChain)) {
         instructions.push({
-          contractAddress: getLsdTokenContract(),
+          contractAddress: lsdTokenContract,
           msg: {
             increase_allowance: {
               spender: getStakeManagerContract(),
@@ -561,6 +589,7 @@ export const handleLsdTokenUnstake =
       };
       dispatch(addNotice(newNotice));
       dispatch(setUnstakeLoading(false));
+      cb && cb(true);
     } catch (err: any) {
       dispatch(setUnstakeLoading(false));
       let displayMsg = err.message || TRANSACTION_FAILED_MESSAGE;

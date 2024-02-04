@@ -2,36 +2,41 @@ import classNames from "classnames";
 import { CustomTag } from "components/common/CustomTag";
 import { FaqItem } from "components/common/FaqItem";
 import { PageTitleContainer } from "components/common/PageTitleContainer";
-import { DashboardTabs } from "components/staking/DashboardTabs";
-import { WithdrawUnstaked } from "components/staking/WithdrawUnstaked";
 import { Icomoon } from "components/icon/Icomoon";
-import { getLsdTokenContract } from "config/contract";
+import { DashboardTabs } from "components/staking/DashboardTabs";
+import { LsdTokenRedelegate } from "components/staking/LsdTokenRedelegate";
+import { RedelegatePage } from "components/staking/RedelegatePage";
+import { StakePage } from "components/staking/StakePage";
+import { WithdrawUnstaked } from "components/staking/WithdrawUnstaked";
+import { lsdTokenChainConfig, neutronChainConfig } from "config/chain";
 import { getExplorerAccountUrl } from "config/explorer";
+import { useAppSelector } from "hooks/common";
+import { useApr } from "hooks/useApr";
+import { useBalance } from "hooks/useBalance";
+import { useLsdTokenRate } from "hooks/useLsdTokenRate";
+import { useWithdrawInfo } from "hooks/useWithdrawInfo";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import auditIcon from "public/images/audit.svg";
 import cooperationIcon from "public/images/cooperation.svg";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { RootState } from "redux/store";
 import { openLink } from "utils/commonUtils";
-import { formatNumber } from "utils/numberUtils";
-import { getLsdTokenIcon } from "utils/iconUtils";
 import {
+  IFaqContent,
   IFaqItem,
   getDetailInfoAudit,
   getDetailInfoListedIns,
   getFaqList,
   getLsdTokenName,
   getSupportChains,
-  IFaqContent,
-  getTokenStandard,
   getTokenName,
+  getTokenStandard,
+  supportLiquidStake,
 } from "utils/configUtils";
-import { StakePage } from "components/staking/StakePage";
-import { useBalance } from "hooks/useBalance";
-import { useLsdTokenRate } from "hooks/useLsdTokenRate";
-import { useApr } from "hooks/useApr";
-import { useWithdrawInfo } from "hooks/useWithdrawInfo";
-import { neutronChainConfig } from "config/chain";
+import { getNeutronPoolInfo } from "utils/cosmosUtils";
+import { getLsdTokenIcon } from "utils/iconUtils";
+import { formatNumber } from "utils/numberUtils";
 
 const TokenPage = () => {
   const router = useRouter();
@@ -39,8 +44,16 @@ const TokenPage = () => {
 
   const { withdrawInfo } = useWithdrawInfo();
 
+  const { neutronPoolInfo } = useAppSelector((state: RootState) => {
+    return {
+      neutronPoolInfo: state.token.neutronPoolInfo,
+    };
+  });
+
   const { lsdBalance } = useBalance();
   const rate = useLsdTokenRate();
+
+  const [lsdTokenContract, setLsdTokenContract] = useState("");
 
   const stakedToken = useMemo(() => {
     if (isNaN(Number(lsdBalance)) || isNaN(Number(rate))) {
@@ -55,6 +68,7 @@ const TokenPage = () => {
       switch (tabParam) {
         case "stake":
         case "unstake":
+        case "liquidStake":
         case "withdraw":
           return tabParam;
         default:
@@ -73,6 +87,16 @@ const TokenPage = () => {
     );
   }, [withdrawInfo, router.query.tab]);
 
+  const showLiquidStake = useMemo(() => {
+    return (
+      supportLiquidStake() && neutronPoolInfo && neutronPoolInfo.lsm_support
+    );
+  }, [neutronPoolInfo]);
+
+  const showTab = useMemo(() => {
+    return showWithdrawTab || showLiquidStake;
+  }, [showWithdrawTab, showLiquidStake]);
+
   const updateTab = (tab: string) => {
     router.replace({
       pathname: router.pathname,
@@ -82,6 +106,13 @@ const TokenPage = () => {
       },
     });
   };
+
+  useEffect(() => {
+    (async () => {
+      const poolInfo = await getNeutronPoolInfo();
+      setLsdTokenContract(poolInfo?.lsd_token || "");
+    })();
+  }, []);
 
   const renderFaqContent = (content: IFaqContent, index: number) => {
     if (content.type === "link") {
@@ -187,11 +218,12 @@ const TokenPage = () => {
 
       <div className="w-smallContentW xl:w-contentW 2xl:w-largeContentW mx-auto">
         <div className="my-[.36rem] mr-[.56rem]">
-          {showWithdrawTab && (
+          {showTab && (
             <DashboardTabs
               selectedTab={selectedTab}
               onChangeTab={updateTab}
               showWithdrawTab={showWithdrawTab}
+              showLiquidStakeTab={showLiquidStake}
             />
           )}
 
@@ -200,6 +232,8 @@ const TokenPage = () => {
               {(selectedTab === "stake" || selectedTab === "unstake") && (
                 <StakePage />
               )}
+
+              {selectedTab === "liquidStake" && <RedelegatePage />}
 
               {selectedTab === "withdraw" && (
                 <WithdrawUnstaked withdrawInfo={withdrawInfo} />
@@ -260,26 +294,28 @@ const TokenPage = () => {
                 )}
               </div>
 
-              <div className="mt-[.16rem] bg-color-bg3 rounded-[.12rem] py-[.16rem] px-[.24rem] text-[.14rem]">
-                <div className="text-color-text1 font-[700]">
-                  {getLsdTokenName()} Token Contract Address
-                </div>
+              {lsdTokenContract && (
+                <div className="mt-[.16rem] bg-color-bg3 rounded-[.12rem] py-[.16rem] px-[.24rem] text-[.14rem]">
+                  <div className="text-color-text1 font-[700]">
+                    {getLsdTokenName()} Token Contract Address
+                  </div>
 
-                <div
-                  className="cursor-pointer mt-[.12rem] text-color-link flex items-center"
-                  onClick={() => {
-                    openLink(getExplorerAccountUrl(getLsdTokenContract()));
-                  }}
-                >
-                  <span className="mr-[.12rem] flex-1 break-all leading-normal dark:text-linkDark/50">
-                    {getLsdTokenContract()}
-                  </span>
+                  <div
+                    className="cursor-pointer mt-[.12rem] text-color-link flex items-center"
+                    onClick={() => {
+                      openLink(getExplorerAccountUrl(lsdTokenContract));
+                    }}
+                  >
+                    <span className="mr-[.12rem] flex-1 break-all leading-normal dark:text-linkDark/50">
+                      {lsdTokenContract}
+                    </span>
 
-                  <div className="min-w-[.12rem]">
-                    <Icomoon icon="share" size=".12rem" />
+                    <div className="min-w-[.12rem]">
+                      <Icomoon icon="share" size=".12rem" />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>

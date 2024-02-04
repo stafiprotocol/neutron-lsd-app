@@ -6,7 +6,10 @@ import {
   setUpdateFlag,
 } from "redux/reducers/AppSlice";
 import { updateApr } from "redux/reducers/LsdTokenSlice";
-import { updateCosmosTokenBalances } from "redux/reducers/TokenSlice";
+import {
+  updateCosmosTokenBalances,
+  updateNeutronPoolInfo,
+} from "redux/reducers/TokenSlice";
 import { autoConnectKeplrChains } from "redux/reducers/WalletSlice";
 import {
   STORAGE_KEY_DARK_MODE,
@@ -57,9 +60,10 @@ export function useInit() {
     };
   }, [dispatch]);
 
-  // Update wallet balances.
+  // Update data.
   useEffect(() => {
     dispatch(updateCosmosTokenBalances());
+    dispatch(updateNeutronPoolInfo());
   }, [dispatch, updateFlag]);
 
   // Change body backgroundColor

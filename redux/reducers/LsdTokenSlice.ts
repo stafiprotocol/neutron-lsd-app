@@ -3,18 +3,19 @@ import { StakeManager } from "codegen/neutron";
 import { neutronChainConfig } from "config/chain";
 import { getPoolAddress, getStakeManagerContract } from "config/contract";
 import { AppThunk } from "redux/store";
-import { getDefaultApr, getTokenDecimals } from "utils/configUtils";
+import { getDefaultApr } from "utils/configUtils";
 import {
   getNeutronLsdTokenBalance,
   getNeutronPoolInfo,
   getNeutronWasmClient,
+  getStakeManagerClient,
 } from "utils/cosmosUtils";
 import { chainAmountToHuman } from "utils/numberUtils";
 
 export interface LsdTokenState {
   balance: string | undefined; // balance of lsdToken
   rate: string | undefined; // rate of lsdToken to Token
-  apr: number | undefined; // lsdToken apr
+  apr: string | undefined; // lsdToken apr
   price: string | undefined; // price of lsdToken
   unbondingDuration: number | undefined;
   lsdTokenPrice: number | undefined;
@@ -45,7 +46,7 @@ export const lsdTokenSlice = createSlice({
     setPrice: (state: LsdTokenState, action: PayloadAction<string>) => {
       state.price = action.payload;
     },
-    setApr: (state: LsdTokenState, action: PayloadAction<number>) => {
+    setApr: (state: LsdTokenState, action: PayloadAction<string>) => {
       state.apr = action.payload;
     },
     setUnbondingDuration: (
@@ -126,12 +127,7 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
     // 7 days before
     const numEras = (60 * 60 * 24 * 7) / Number(eraSeconds);
 
-    const cosmWasmClient = await getNeutronWasmClient();
-
-    const stakeManagerClient = new StakeManager.Client(
-      cosmWasmClient,
-      getStakeManagerContract()
-    );
+    const stakeManagerClient = await getStakeManagerClient();
 
     const beginEra = Math.max(0, currentEra - numEras);
 
@@ -160,15 +156,13 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
       beginRate !== 1 &&
       beginRate !== endRate
     ) {
-      apr =
-        (((endRate - beginRate) / 7) * 365.25 * 100) /
-        Math.pow(10, getTokenDecimals());
+      apr = chainAmountToHuman(((endRate - beginRate) / 7) * 365.25 * 100);
     }
 
-    dispatch(setApr(apr));
+    dispatch(setApr(apr || ""));
   } catch (err: any) {
     console.error({ err });
-    dispatch(setApr(apr));
+    dispatch(setApr(apr || ""));
   }
 };
 
@@ -178,12 +172,7 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
 export const updateLsdTokenUnbondingDuration =
   (): AppThunk => async (dispatch, getState) => {
     try {
-      const cosmWasmClient = await getNeutronWasmClient();
-
-      const stakeManagerClient = new StakeManager.Client(
-        cosmWasmClient,
-        getStakeManagerContract()
-      );
+      const stakeManagerClient = await getStakeManagerClient();
       const poolInfo = await stakeManagerClient.queryPoolInfo({
         pool_addr: getPoolAddress(),
       });

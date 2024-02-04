@@ -17,15 +17,14 @@
       "bech32PrefixConsPub": "neutronvalconspub"
     },
     "explorerUrl": "https://www.mintscan.io/neutron",
-    "defaultApy": "19",
-    "stakeReserveAmount": 0.05,
     "gasLimit": "80000",
     "isNativeKeplrChain": false
   },
-  "lsdToken": {
+  "lsdTokenChain": {
     "chainName": "Cosmos Hub",
     "chainId": "cosmoshub-4",
     "displayHubName": "CosmosHub",
+    "lsdTokenName": "rATOM",
     "rpc": "https://cosmos-rpc1.stafi.io",
     "restEndpoint": "https://cosmos-rpc1.stafi.io",
     "denom": "uatom",
@@ -40,7 +39,7 @@
       "bech32PrefixConsPub": "cosmosvalconspub"
     },
     "explorerUrl": "https://www.mintscan.io/cosmos",
-    "defaultApy": "19",
+    "defaultApr": "5",
     "stakeReserveAmount": 0.05,
     "gasLimit": "80000",
     "isNativeKeplrChain": true

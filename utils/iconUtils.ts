@@ -1,13 +1,13 @@
 import appConfig from "config/appConf/app.json";
 
 export function getTokenIcon() {
-  return appConfig.token.tokenImg;
+  return appConfig.icons.tokenImg;
 }
 
 export function getLsdTokenIcon() {
-  return appConfig.token.lsdTokenImg;
+  return appConfig.icons.lsdTokenImg;
 }
 
 export function getChainIcon() {
-  return appConfig.token.chainImg;
+  return appConfig.icons.chainImg;
 }
