@@ -28,7 +28,6 @@
     "rpc": "https://test-cosmos-rpc1.stafihub.io",
     "restEndpoint": "https://test-cosmos-rest1.stafihub.io",
     "denom": "uatom",
-    "lsdTokenDenom": "uratom",
     "coinDenom": "ATOM",
     "decimals": 6,
     "bech32Config": {

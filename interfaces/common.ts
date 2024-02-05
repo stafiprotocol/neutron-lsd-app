@@ -24,7 +24,6 @@ export interface ChainConfig {
   rpc: string;
   restEndpoint: string;
   denom: string;
-  lsdTokenDenom?: string;
   coinDenom: string;
   lsdTokenName?: string;
   decimals: number;
