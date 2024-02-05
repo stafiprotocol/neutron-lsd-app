@@ -4,11 +4,10 @@ import { FaqItem } from "components/common/FaqItem";
 import { PageTitleContainer } from "components/common/PageTitleContainer";
 import { Icomoon } from "components/icon/Icomoon";
 import { DashboardTabs } from "components/staking/DashboardTabs";
-import { LsdTokenRedelegate } from "components/staking/LsdTokenRedelegate";
 import { RedelegatePage } from "components/staking/RedelegatePage";
 import { StakePage } from "components/staking/StakePage";
 import { WithdrawUnstaked } from "components/staking/WithdrawUnstaked";
-import { lsdTokenChainConfig, neutronChainConfig } from "config/chain";
+import { neutronChainConfig } from "config/chain";
 import { getExplorerAccountUrl } from "config/explorer";
 import { useAppSelector } from "hooks/common";
 import { useApr } from "hooks/useApr";
@@ -35,7 +34,7 @@ import {
 } from "utils/configUtils";
 import { getNeutronPoolInfo } from "utils/cosmosUtils";
 import { getLsdTokenIcon } from "utils/iconUtils";
-import { formatNumber } from "utils/numberUtils";
+import { formatNumber, getRefinedStakedAmount } from "utils/numberUtils";
 
 const TokenPage = () => {
   const router = useRouter();
@@ -58,7 +57,7 @@ const TokenPage = () => {
     if (isNaN(Number(lsdBalance)) || isNaN(Number(rate))) {
       return "--";
     }
-    return Number(lsdBalance) * Number(rate);
+    return getRefinedStakedAmount(lsdBalance, rate);
   }, [lsdBalance, rate]);
 
   const selectedTab = useMemo(() => {

@@ -7,9 +7,9 @@ import { isDev } from "./env";
  */
 export function getStakeManagerContract() {
   if (isDev()) {
-    return appDevConfig.contracts.stakeManager.address;
+    return appDevConfig.stakeManagerContract;
   }
-  return appProdConfig.contracts.stakeManager.address;
+  return appProdConfig.stakeManagerContract;
 }
 
 /**
@@ -17,7 +17,7 @@ export function getStakeManagerContract() {
  */
 export function getPoolAddress() {
   if (isDev()) {
-    return appDevConfig.contracts.poolAddress.address;
+    return appDevConfig.poolAddress;
   }
-  return appProdConfig.contracts.poolAddress.address;
+  return appProdConfig.poolAddress;
 }

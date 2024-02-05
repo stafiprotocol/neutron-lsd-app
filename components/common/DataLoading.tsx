@@ -27,7 +27,7 @@ export const DataLoading = (props: Props) => {
         height={height}
         sx={{
           fontSize: height,
-          bgcolor: darkMode ? "grey.900" : "grey.100",
+          bgcolor: darkMode ? "#ffffff4D" : "#6C86AD33",
         }}
       />
     </div>

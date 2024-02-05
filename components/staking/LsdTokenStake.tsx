@@ -109,8 +109,8 @@ export const LsdTokenStake = () => {
         !neutronAccount && !lsdTokenAccount
           ? "Connect Wallet"
           : !neutronAccount
-          ? `Connect ${neutronChainConfig.displayHubName}`
-          : `Connect ${lsdTokenChainConfig.displayHubName}`;
+          ? `Connect ${neutronChainConfig.chainName}`
+          : `Connect ${lsdTokenChainConfig.chainName}`;
       return [false, text, true];
     }
     if (

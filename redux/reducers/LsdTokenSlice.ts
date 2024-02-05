@@ -46,7 +46,10 @@ export const lsdTokenSlice = createSlice({
     setPrice: (state: LsdTokenState, action: PayloadAction<string>) => {
       state.price = action.payload;
     },
-    setApr: (state: LsdTokenState, action: PayloadAction<string>) => {
+    setApr: (
+      state: LsdTokenState,
+      action: PayloadAction<string | undefined>
+    ) => {
       state.apr = action.payload;
     },
     setUnbondingDuration: (
@@ -160,12 +163,10 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
     ) {
       apr = chainAmountToHuman(((endRate - beginRate) / 7) * 365.25 * 100);
     }
-
-    dispatch(setApr(apr || ""));
   } catch (err: any) {
     console.error({ err });
-    dispatch(setApr(apr || ""));
   }
+  dispatch(setApr(apr || getDefaultApr()));
 };
 
 /**

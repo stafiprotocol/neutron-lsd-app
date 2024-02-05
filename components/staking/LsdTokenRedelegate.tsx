@@ -209,9 +209,9 @@ export const LsdTokenRedelegate = (props: {}) => {
       if (!neutronKeplrAccount && !lsdTokenKeplrAccount) {
         return [false, "Connect Wallet", true];
       } else if (!lsdTokenKeplrAccount) {
-        return [false, `Connect ${lsdTokenChainConfig.displayHubName}`, true];
+        return [false, `Connect ${lsdTokenChainConfig.chainName}`, true];
       } else {
-        return [false, `Connect ${neutronChainConfig.displayHubName}`, true];
+        return [false, `Connect ${neutronChainConfig.chainName}`, true];
       }
     }
     if (
@@ -315,9 +315,9 @@ export const LsdTokenRedelegate = (props: {}) => {
         if (!neutronKeplrAccount && !lsdTokenKeplrAccount) {
           return [false, "Connect Wallet first", true];
         } else if (!lsdTokenKeplrAccount) {
-          return [false, `Connect ${lsdTokenChainConfig.displayHubName}`, true];
+          return [false, `Connect ${lsdTokenChainConfig.chainName}`, true];
         } else {
-          return [false, `Connect ${neutronChainConfig.displayHubName}`, true];
+          return [false, `Connect ${neutronChainConfig.chainName}`, true];
         }
       }
 

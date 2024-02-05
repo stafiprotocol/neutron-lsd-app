@@ -145,3 +145,20 @@ function formatScientificNumber(x: any): string {
   }
   return x.toString();
 }
+
+export function getRefinedStakedAmount(
+  lsdTokenAmount: string | undefined,
+  lsdRate: string | undefined
+): string {
+  if (!lsdTokenAmount || !lsdRate) {
+    return "--";
+  }
+  const stakedAmount = Number(lsdTokenAmount) * Number(lsdRate);
+  const temp = stakedAmount * 1000000;
+  if (temp < 10) {
+    return stakedAmount + "";
+  } else {
+    const result = Math.ceil(temp) / 1000000;
+    return result + "";
+  }
+}

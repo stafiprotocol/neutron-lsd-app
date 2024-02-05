@@ -20,7 +20,6 @@ export type CosmosAccountMap = { [key: string]: CosmosAccount | null };
 export interface ChainConfig {
   chainId: string;
   chainName: string;
-  displayHubName: string;
   rpc: string;
   restEndpoint: string;
   denom: string;

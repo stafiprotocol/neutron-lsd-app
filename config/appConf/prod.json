@@ -1,10 +1,49 @@
 {
-  "contracts": {
-    "stakeManager": {
-      "address": "neutron16ecn09hyz97rw6v6py2tddpcj2k7fvkfm6tlg5xzqywdmgmnc74qhya7au"
+  "stakeManagerContract": "neutron1humx752uqvxn2jfenh5524md0ta23usm8m2lesaxw47fps28yx5syztnk5",
+  "poolAddress": "cosmos17n0n04nsefgkjer0t2j97cqfpyt0vpnewp8xmk8r70rzryfxxtmq3350af",
+  "chains": {
+    "neutron": {
+      "chainName": "Neutron",
+      "chainId": "neutron-1",
+      "rpc": "https://rpc-falcron.neutron-1.ntrn.tech",
+      "restEndpoint": "https://rpc-falcron.neutron-1.ntrn.tech",
+      "denom": "untrn",
+      "coinDenom": "NTRN",
+      "decimals": 6,
+      "bech32Config": {
+        "bech32PrefixAccAddr": "neutron",
+        "bech32PrefixAccPub": "neutronpub",
+        "bech32PrefixValAddr": "neutronvaloper",
+        "bech32PrefixValPub": "neutronvaloperpub",
+        "bech32PrefixConsAddr": "neutronvalcons",
+        "bech32PrefixConsPub": "neutronvalconspub"
+      },
+      "explorerUrl": "https://www.mintscan.io/neutron",
+      "gasLimit": "80000",
+      "isNativeKeplrChain": false
     },
-    "poolAddress": {
-      "address": ""
+    "lsdTokenChain": {
+      "chainName": "Cosmos Hub",
+      "chainId": "cosmoshub-4",
+      "lsdTokenName": "rATOM",
+      "rpc": "https://cosmos-rpc1.stafi.io",
+      "restEndpoint": "https://cosmos-rpc1.stafi.io",
+      "denom": "uatom",
+      "coinDenom": "ATOM",
+      "decimals": 6,
+      "bech32Config": {
+        "bech32PrefixAccAddr": "cosmos",
+        "bech32PrefixAccPub": "cosmospub",
+        "bech32PrefixValAddr": "cosmosvaloper",
+        "bech32PrefixValPub": "cosmosvaloperpub",
+        "bech32PrefixConsAddr": "cosmosvalcons",
+        "bech32PrefixConsPub": "cosmosvalconspub"
+      },
+      "explorerUrl": "https://www.mintscan.io/cosmos",
+      "defaultApr": "5",
+      "stakeReserveAmount": 0.05,
+      "gasLimit": "80000",
+      "isNativeKeplrChain": true
     }
   }
 }
