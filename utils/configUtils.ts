@@ -17,10 +17,6 @@ export function getSupportChains() {
   return appConfig.chain.supportChains;
 }
 
-export function getTokenStandard() {
-  return appConfig.chain.tokenStandard;
-}
-
 export function getTokenChainName() {
   return neutronChainConfig.chainName;
 }

@@ -31,7 +31,6 @@ import {
   getLsdTokenName,
   getSupportChains,
   getTokenName,
-  getTokenStandard,
   supportLiquidStake,
 } from "utils/configUtils";
 import { getNeutronPoolInfo } from "utils/cosmosUtils";
@@ -180,7 +179,7 @@ const TokenPage = () => {
               <div className="ml-[.16rem]">
                 <CustomTag type="stroke">
                   <div className="text-[.16rem] scale-75 origin-center">
-                    {getTokenStandard()}
+                    CW20
                   </div>
                 </CustomTag>
               </div>

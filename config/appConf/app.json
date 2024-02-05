@@ -1,8 +1,7 @@
 {
   "appTitle": "Neutron LSD App",
   "chain": {
-    "supportChains": ["Neutron"],
-    "tokenStandard": "Neutron"
+    "supportChains": ["Neutron"]
   },
   "icons": {
     "tokenImg": "/images/token/token_green.svg",
