@@ -188,7 +188,7 @@ const TokenPage = () => {
                 <CustomTag>
                   <div className="text-[.16rem] scale-75 origin-center flex items-center">
                     <span className="font-[700]">
-                      {formatNumber(apr, { decimals: 2 })}%
+                      {formatNumber(apr, { decimals: 2, toReadable: false })}%
                     </span>
                     <span className="ml-[.02rem]">APR</span>
                   </div>

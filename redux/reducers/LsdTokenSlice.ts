@@ -150,6 +150,8 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
     const endRate = Number(endRateRes);
 
     if (
+      beginRateRes &&
+      endRateRes &&
       !isNaN(beginRate) &&
       !isNaN(endRate) &&
       endRate !== 1 &&
