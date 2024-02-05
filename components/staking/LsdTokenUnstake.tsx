@@ -233,9 +233,9 @@ export const LsdTokenUnstake = () => {
   return (
     <div>
       <div
-        className="cursor-pointer h-[.56rem] mt-[.18rem] mx-[.24rem] bg-[#6C86AD14] dark:bg-[#6C86AD50] rounded-[.16rem] flex items-center justify-between pl-[.12rem] pr-[.18rem]"
+        className="h-[.56rem] mt-[.18rem] mx-[.24rem] bg-[#6C86AD14] dark:bg-[#6C86AD50] rounded-[.16rem] flex items-center justify-between pl-[.12rem] pr-[.18rem]"
         onClick={() => {
-          openLink(getUnstakeTipLink());
+          // openLink(getUnstakeTipLink());
         }}
       >
         <div className="flex items-center">
@@ -250,7 +250,7 @@ export const LsdTokenUnstake = () => {
           </div>
         </div>
 
-        <Icomoon icon="right" color="#6C86AD" size=".11rem" />
+        {/* <Icomoon icon="right" color="#6C86AD" size=".11rem" /> */}
       </div>
 
       <div className="h-[1.07rem] mt-[.18rem] pt-[.24rem] mx-[.24rem] bg-color-bgPage rounded-[.3rem]">

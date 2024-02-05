@@ -509,7 +509,7 @@ export const LsdTokenRedelegate = (props: {}) => {
 
   return (
     <div>
-      {exceedLimit ? (
+      {exceedLimit && (
         <div
           className="cursor-pointer h-[.56rem] mx-[.24rem] bg-[#6C86AD14] dark:bg-[#6C86AD50] rounded-[.16rem] flex items-center justify-between pl-[.12rem] pr-[.18rem]"
           onClick={() => {
@@ -525,49 +525,6 @@ export const LsdTokenRedelegate = (props: {}) => {
               Liquid Stake is currently disabled because LSM has reached its{" "}
               {formatNumber(Number(liquidStakingCap) * 100, { decimals: 0 })}%
               cap
-            </div>
-          </div>
-
-          <Icomoon icon="right" color="#6C86AD" size=".11rem" />
-        </div>
-      ) : (
-        // : noValidValidator ? (
-        //   <div
-        //     className="cursor-pointer h-[.56rem] mx-[.24rem] bg-[#6C86AD14] dark:bg-[#6C86AD50] rounded-[.16rem] flex items-center justify-between pl-[.12rem] pr-[.18rem]"
-        //     onClick={() => {
-        //       openLink("https://www.google.com");
-        //     }}
-        //   >
-        //     <div className="flex items-center">
-        //       <Icomoon icon="tip" size=".2rem" />
-
-        //       <div className="ml-[.06rem] text-color-text2 text-[.14rem] leading-normal">
-        //         Liquid Stake is currently disabled because no validator found
-        //       </div>
-        //     </div>
-
-        //     <Icomoon icon="right" color="#6C86AD" size=".11rem" />
-        //   </div>
-        // )
-        <div
-          className="cursor-pointer h-[.56rem] mx-[.24rem] rounded-[.16rem] flex items-center justify-between pl-[.12rem] pr-[.18rem]"
-          style={{
-            background:
-              "linear-gradient(90.05deg, rgba(128, 202, 255, 0.2) 0.04%, rgba(128, 202, 255, 0) 96.37%)",
-          }}
-          onClick={() => {
-            openLink(
-              "https://dao.stafi.io/t/sip-8-stafi-lsm-integration-proposal/116"
-            );
-          }}
-        >
-          <div className="flex items-center">
-            <div className="w-[.2rem] h-[.23rem] relative">
-              <Image src={celebrateIcon} alt="icon" layout="fill" />
-            </div>
-
-            <div className="ml-[.06rem] text-color-text2 text-[.14rem]">
-              Liquid Stake is a new function that integrates COSMOS LSM module
             </div>
           </div>
 
