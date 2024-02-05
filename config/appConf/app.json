@@ -8,9 +8,6 @@
     "lsdTokenImg": "/images/token/lsdToken.svg",
     "chainImg": "/images/neutron_chain.png"
   },
-  "unstake": {
-    "lockTipLink": "https://docs.stafi.io/stakingatom/#how-to-unstake"
-  },
   "detailedInfo": {
     "audit": {
       "nameList": ["Blocksec"],

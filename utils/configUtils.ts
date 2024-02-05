@@ -43,10 +43,6 @@ export function getFaqList(): IFaqItem[] {
   return appConfig.faqList;
 }
 
-export function getUnstakeTipLink() {
-  return appConfig.unstake.lockTipLink;
-}
-
 export function getAuditList() {
   return appConfig.auditList;
 }
