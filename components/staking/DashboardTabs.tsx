@@ -1,8 +1,6 @@
 import classNames from "classnames";
-import { lsdTokenChainConfig } from "config/chain";
 import { useRouter } from "next/router";
 import { useMemo } from "react";
-import { supportLiquidStake } from "utils/configUtils";
 
 interface Props {
   selectedTab: "stake" | "unstake" | "liquidStake" | "withdraw";

@@ -2,51 +2,50 @@ import { Popover, Skeleton } from "@mui/material";
 import { queryStakingValidator } from "@stafihub/apps-wallet";
 import classNames from "classnames";
 import { EmptyContent } from "components/common/EmptyContent";
+import { MyTooltip } from "components/common/MyTooltip";
 import { Icomoon } from "components/icon/Icomoon";
+import { lsdTokenChainConfig, neutronChainConfig } from "config/chain";
+import { DEFAULT_STAKE_FEE } from "constants/common";
 import { useAppDispatch, useAppSelector } from "hooks/common";
 import { useAppSlice } from "hooks/selector";
+import { useApr } from "hooks/useApr";
+import { useBalance } from "hooks/useBalance";
+import { useCosmosChainAccount } from "hooks/useCosmosChainAccount";
+import { useDebouncedEffect } from "hooks/useDebouncedEffect";
+import { useDelegateTokenAmount } from "hooks/useDelegateTokenAmount";
+import { useLsdTokenRate } from "hooks/useLsdTokenRate";
+import { useLsmBalance } from "hooks/useLsmBalance";
+import { useLsmValidator } from "hooks/useLsmValidator";
+import { useMinimalStake } from "hooks/useMinimalStake";
+import { usePrice } from "hooks/usePrice";
+import { useStakingLimit } from "hooks/useStakingLimit";
+import { ChainConfig, LsmBalanceItem, LsmSendItem } from "interfaces/common";
+import _ from "lodash";
 import { bindPopover } from "material-ui-popup-state";
 import { bindTrigger, usePopupState } from "material-ui-popup-state/hooks";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import celebrateIcon from "public/images/celebrate.png";
 import defaultAvatar from "public/images/default_avatar.png";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import {
+  redelegateLsmToken,
+  redelegateStakedToken,
+} from "redux/reducers/RedelegateSlice";
+import { connectKeplrAccount } from "redux/reducers/WalletSlice";
 import { RootState } from "redux/store";
-import snackbarUtil from "utils/snackbarUtils";
-import { CustomButton } from "../common/CustomButton";
-import { CustomNumberInput } from "../common/CustomNumberInput";
-import { DataLoading } from "../common/DataLoading";
-import { useDebouncedEffect } from "hooks/useDebouncedEffect";
-import { lsdTokenChainConfig, neutronChainConfig } from "config/chain";
-import { useCosmosChainAccount } from "hooks/useCosmosChainAccount";
-import { useApr } from "hooks/useApr";
-import { useLsdTokenRate } from "hooks/useLsdTokenRate";
-import { useBalance } from "hooks/useBalance";
-import { useDelegateTokenAmount } from "hooks/useDelegateTokenAmount";
-import { useStakingLimit } from "hooks/useStakingLimit";
-import { useLsmBalance } from "hooks/useLsmBalance";
-import _ from "lodash";
+import { openLink } from "utils/commonUtils";
+import { getLsdTokenName, getTokenName } from "utils/configUtils";
+import { getTokenIcon } from "utils/iconUtils";
 import {
   amountToChain,
   chainAmountToHuman,
   formatLargeAmount,
   formatNumber,
 } from "utils/numberUtils";
-import { useLsmValidator } from "hooks/useLsmValidator";
-import { usePrice } from "hooks/usePrice";
-import { DEFAULT_STAKE_FEE } from "constants/common";
-import { getLsdTokenName, getTokenName } from "utils/configUtils";
-import { ChainConfig, LsmBalanceItem, LsmSendItem } from "interfaces/common";
-import { connectKeplrAccount } from "redux/reducers/WalletSlice";
-import { openLink } from "utils/commonUtils";
-import { getTokenIcon } from "utils/iconUtils";
-import { MyTooltip } from "components/common/MyTooltip";
-import { useMinimalStake } from "hooks/useMinimalStake";
-import {
-  redelegateLsmToken,
-  redelegateStakedToken,
-} from "redux/reducers/RedelegateSlice";
+import snackbarUtil from "utils/snackbarUtils";
+import { CustomButton } from "../common/CustomButton";
+import { CustomNumberInput } from "../common/CustomNumberInput";
+import { DataLoading } from "../common/DataLoading";
 
 export const LsdTokenRedelegate = (props: {}) => {
   const router = useRouter();

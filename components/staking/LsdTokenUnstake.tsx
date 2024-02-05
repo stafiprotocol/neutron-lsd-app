@@ -2,6 +2,7 @@ import classNames from "classnames";
 import { BubblesLoading } from "components/common/BubblesLoading";
 import { Icomoon } from "components/icon/Icomoon";
 import { lsdTokenChainConfig, neutronChainConfig } from "config/chain";
+import { DEFAULT_UNSTAKE_FEE } from "constants/common";
 import { useAppDispatch, useAppSelector } from "hooks/common";
 import { useAppSlice } from "hooks/selector";
 import { useApr } from "hooks/useApr";
@@ -20,19 +21,14 @@ import { updateLsdTokenBalance } from "redux/reducers/LsdTokenSlice";
 import { handleLsdTokenUnstake } from "redux/reducers/TokenSlice";
 import { connectKeplrAccount } from "redux/reducers/WalletSlice";
 import { RootState } from "redux/store";
-import { isEmptyValue, openLink } from "utils/commonUtils";
-import {
-  getLsdTokenName,
-  getTokenName,
-  getUnstakeTipLink,
-} from "utils/configUtils";
+import { isEmptyValue } from "utils/commonUtils";
+import { getLsdTokenName, getTokenName } from "utils/configUtils";
 import { getLsdTokenIcon } from "utils/iconUtils";
 import { getUnstakeDaysLeft } from "utils/lsdTokenUtils";
 import { formatLargeAmount, formatNumber } from "utils/numberUtils";
 import { CustomButton } from "../common/CustomButton";
 import { CustomNumberInput } from "../common/CustomNumberInput";
 import { DataLoading } from "../common/DataLoading";
-import { DEFAULT_UNSTAKE_FEE } from "constants/common";
 
 export const LsdTokenUnstake = () => {
   const router = useRouter();

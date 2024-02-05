@@ -1,9 +1,19 @@
 import classNames from "classnames";
 import dayjs from "dayjs";
-import { useEffect } from "react";
+import { useAppDispatch, useAppSelector } from "hooks/common";
+import { useAppSlice } from "hooks/selector";
+import Image from "next/image";
 import stakeIcon from "public/images/notice/notice_stake.svg";
 import unstakeIcon from "public/images/notice/notice_unstake.svg";
 import withdrawIcon from "public/images/notice/notice_withdraw.svg";
+import { useEffect } from "react";
+import {
+  setStakeLoadingParams,
+  updateStakeLoadingParams,
+} from "redux/reducers/AppSlice";
+import { RootState } from "redux/store";
+import { openLink } from "utils/commonUtils";
+import { getLsdTokenName, getTokenName } from "utils/configUtils";
 import {
   LocalNotice,
   NoticeStakeData,
@@ -12,17 +22,6 @@ import {
 } from "utils/noticeUtils";
 import { formatNumber } from "utils/numberUtils";
 import { formatDate } from "utils/timeUtils";
-import { useAppDispatch, useAppSelector } from "hooks/common";
-import { RootState } from "redux/store";
-import {
-  setStakeLoadingParams,
-  updateNotice,
-  updateStakeLoadingParams,
-} from "redux/reducers/AppSlice";
-import { openLink } from "utils/commonUtils";
-import Image from "next/image";
-import { useAppSlice } from "hooks/selector";
-import { getLsdTokenName, getTokenName } from "utils/configUtils";
 
 export const NoticeItem = (props: {
   notice: LocalNotice;
