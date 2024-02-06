@@ -30,7 +30,7 @@
     "sass": "^1.66.1",
     "tailwindcss": "^3.3.3",
     "web3-utils": "1.9.0",
-    "@stafihub/apps-wallet": "2.8.0",
+    "@stafihub/apps-wallet": "2.8.1",
     "lodash": "4.17.21"
   },
   "devDependencies": {

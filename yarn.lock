@@ -769,10 +769,10 @@
     "@cosmjs/math" "0.29.4"
     bignumber.js "9.0.2"
 
-"@stafihub/apps-wallet@2.8.0":
-  version "2.8.0"
-  resolved "https://registry.yarnpkg.com/@stafihub/apps-wallet/-/apps-wallet-2.8.0.tgz#8698002028919c571440c6c1cd089728d167fef7"
-  integrity sha512-kn2to4FgWyNZ7c48G74t+CvgP2ms2nqF50M3QamaZyQ4jgLv+3i2czbwZXHGbH+0+B6FaU5UKiM5iZt5C5CaHQ==
+"@stafihub/apps-wallet@2.8.1":
+  version "2.8.1"
+  resolved "https://registry.yarnpkg.com/@stafihub/apps-wallet/-/apps-wallet-2.8.1.tgz#cfffedeedb94c3b6a507c877e562f660d515a037"
+  integrity sha512-Yfd0CQbdAdGkcFl+4pFpZrSAw+HXdgSD/ZnbRhxzLb87+LXSNIdpdZqYpnO/iMOI8j4hWRyTLmjLsbZDrj0gEA==
   dependencies:
     "@cosmjs/cosmwasm-stargate" "0.32.2"
     "@cosmjs/encoding" "0.32.2"
