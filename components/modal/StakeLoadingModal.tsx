@@ -149,13 +149,12 @@ export const StakeLoadingModal = () => {
               "mx-[.36rem] mt-[.2rem] mb-[.32rem] leading-tight text-center text-[.16rem] text-color-text2"
             )}
             style={{
-              maxLines: 3,
               WebkitLineClamp: 3,
               lineClamp: 3,
               overflow: "hidden",
-              textOverflow: "ellipsis",
               display: "-webkit-box",
               WebkitBoxOrient: "vertical",
+              wordBreak: "break-word",
             }}
           >
             {secondaryMsg}

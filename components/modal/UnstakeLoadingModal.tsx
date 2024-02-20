@@ -171,13 +171,12 @@ export const UnstakeLoadingModal = () => {
               "mt-[.12rem] text-[.16rem] text-color-text2 text-center leading-tight"
             )}
             style={{
-              maxLines: 5,
               WebkitLineClamp: 5,
               lineClamp: 5,
               overflow: "hidden",
-              textOverflow: "ellipsis",
               display: "-webkit-box",
               WebkitBoxOrient: "vertical",
+              wordBreak: "break-word",
             }}
           >
             {secondaryMsg}
