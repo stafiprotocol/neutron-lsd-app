@@ -22,6 +22,14 @@ export function useBalance() {
     return chainAmountToHuman(tokenBalance, lsdTokenChainConfig.decimals);
   }, [lsdTokenAccount]);
 
+  const ntrnBalance = useMemo(() => {
+    const tokenBalance = getTokenBalance(
+      neutronAccount?.allBalances,
+      neutronChainConfig.denom
+    );
+    return chainAmountToHuman(tokenBalance, neutronChainConfig.decimals);
+  }, [neutronAccount]);
+
   const { lsdBalance } = useAppSelector((state: RootState) => {
     return {
       balance: state.token.balance,
@@ -36,6 +44,7 @@ export function useBalance() {
   }, [dispatch, updateFlag]);
 
   return {
+    ntrnBalance,
     balance,
     lsdBalance,
   };

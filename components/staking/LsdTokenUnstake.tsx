@@ -39,7 +39,7 @@ export const LsdTokenUnstake = () => {
   const lsdTokenAccount = useCosmosChainAccount(lsdTokenChainConfig.chainId);
   const lsdTokenRate = useLsdTokenRate();
 
-  const { lsdBalance, balance } = useBalance();
+  const { lsdBalance, ntrnBalance } = useBalance();
 
   const { apr } = useApr();
   const { ntrnPrice, tokenPrice } = usePrice();
@@ -140,9 +140,9 @@ export const LsdTokenUnstake = () => {
 
     if (
       (isNaN(Number(estimateFee)) ? 0 : Number(estimateFee) * 1.4) >
-      Number(balance)
+      Number(ntrnBalance)
     ) {
-      return [true, `Not Enough ${getTokenName()} for Fee`];
+      return [true, `Not Enough NTRN for Fee`];
     }
 
     return [false, "Unstake"];
@@ -151,7 +151,7 @@ export const LsdTokenUnstake = () => {
     unstakeAmount,
     walletNotConnected,
     estimateFee,
-    balance,
+    ntrnBalance,
     neutronAccount,
     lsdTokenAccount,
   ]);
@@ -318,16 +318,7 @@ export const LsdTokenUnstake = () => {
         type={isButtonSecondary ? "secondary" : "primary"}
         border="none"
       >
-        <div className="flex items-center">
-          {buttonText}
-
-          {(buttonText.indexOf("Wrong network") >= 0 ||
-            buttonText.indexOf("Insufficient FIS.") >= 0) && (
-            <div className="ml-[.12rem] flex items-center">
-              <Icomoon icon="arrow-right" size=".12rem" color="#222C3C" />
-            </div>
-          )}
-        </div>
+        <div className="flex items-center">{buttonText}</div>
       </CustomButton>
 
       <div
