@@ -1,16 +1,14 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { StakeManager } from "codegen/neutron";
 import { neutronChainConfig } from "config/chain";
-import { getPoolAddress, getStakeManagerContract } from "config/contract";
+import { getPoolAddress } from "config/contract";
 import { AppThunk } from "redux/store";
 import { getDefaultApr } from "utils/configUtils";
 import {
   getNeutronLsdTokenBalance,
   getNeutronPoolInfo,
-  getNeutronWasmClient,
   getStakeManagerClient,
 } from "utils/cosmosUtils";
-import { chainAmountToHuman } from "utils/numberUtils";
+import { amountToChain, chainAmountToHuman } from "utils/numberUtils";
 
 export interface LsdTokenState {
   balance: string | undefined; // balance of lsdToken
@@ -128,11 +126,11 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
     const currentEra = poolInfo.era;
 
     let annualizedDays = 7;
-    let numEras = (60 * 60 * 24 * annualizedDays) / Number(eraSeconds);
+    let numEras = Math.ceil((60 * 60 * 24 * annualizedDays) / Number(eraSeconds));
 
     if (currentEra - numEras <= 0) {
       annualizedDays = 1;
-      numEras = (60 * 60 * 24) / Number(eraSeconds);
+      numEras = Math.ceil((60 * 60 * 24) / Number(eraSeconds));
     }
 
     const stakeManagerClient = await getStakeManagerClient();
@@ -157,8 +155,8 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
       endRateRes &&
       !isNaN(beginRate) &&
       !isNaN(endRate) &&
-      endRate !== 1000000 &&
-      beginRate !== 1000000 &&
+      endRate !== Number(amountToChain(1, neutronChainConfig.decimals)) &&
+      beginRate !== Number(amountToChain(1, neutronChainConfig.decimals)) &&
       beginRate !== endRate
     ) {
       apr = ((endRate - beginRate) / beginRate / annualizedDays) * 365.25 * 100 + "";
