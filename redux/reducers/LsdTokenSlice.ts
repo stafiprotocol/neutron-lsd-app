@@ -10,7 +10,7 @@ import {
   getNeutronWasmClient,
   getStakeManagerClient,
 } from "utils/cosmosUtils";
-import { chainAmountToHuman } from "utils/numberUtils";
+import { amountToChain, chainAmountToHuman } from "utils/numberUtils";
 
 export interface LsdTokenState {
   balance: string | undefined; // balance of lsdToken
@@ -157,8 +157,8 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
       endRateRes &&
       !isNaN(beginRate) &&
       !isNaN(endRate) &&
-      endRate !== 1 &&
-      beginRate !== 1 &&
+      endRate !== Number(amountToChain(1, neutronChainConfig.decimals)) &&
+      beginRate !== Number(amountToChain(1, neutronChainConfig.decimals)) &&
       beginRate !== endRate
     ) {
       apr = chainAmountToHuman(((endRate - beginRate) / 7) * 365.25 * 100);
