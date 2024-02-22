@@ -127,15 +127,18 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
     const eraSeconds = poolInfo.era_seconds;
     const currentEra = poolInfo.era;
 
-    // 7 days before
-    const numEras = (60 * 60 * 24 * 7) / Number(eraSeconds);
+    let annualizedDays = 7;
+    let numEras = (60 * 60 * 24 * annualizedDays) / Number(eraSeconds);
+
+    if (currentEra - numEras <= 0) {
+      annualizedDays = 1;
+      numEras = (60 * 60 * 24) / Number(eraSeconds);
+    }
 
     const stakeManagerClient = await getStakeManagerClient();
 
     const beginEra = Math.max(0, currentEra - numEras);
 
-    // console.log({ beginEra });
-    // console.log({ currentEra });
     const beginRateRes = await stakeManagerClient.queryEraRate({
       pool_addr: getPoolAddress(),
       era: beginEra,
@@ -146,9 +149,6 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
       era: currentEra,
     });
 
-    // console.log({ beginRateRes });
-    // console.log({ endRateRes });
-
     const beginRate = Number(beginRateRes);
     const endRate = Number(endRateRes);
 
@@ -157,11 +157,11 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
       endRateRes &&
       !isNaN(beginRate) &&
       !isNaN(endRate) &&
-      endRate !== 1 &&
-      beginRate !== 1 &&
+      endRate !== 1000000 &&
+      beginRate !== 1000000 &&
       beginRate !== endRate
     ) {
-      apr = chainAmountToHuman(((endRate - beginRate) / 7) * 365.25 * 100);
+      apr = ((endRate - beginRate) / beginRate / annualizedDays) * 365.25 * 100 + "";
     }
   } catch (err: any) {
     console.error({ err });
