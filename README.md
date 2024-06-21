@@ -7,9 +7,8 @@ Neutron LSD App is a user interface where users can stake, unstake and get lates
 1. Fork code on GitHub
 2. Install Node.js >=v16
 3. Install yarn via npm: npm install --global yarn
-4. Open code in VSCode
-5. Enter project root directory then install all dependencies via terminal: yarn
-6. Start app by: yarn dev
+4. Enter project root directory then install all dependencies via terminal: yarn
+5. Start app by: yarn dev
 
 ## Config your app
 
@@ -24,3 +23,7 @@ You can change color config in `tailwind.config.js`, each color has light & dark
 ## Build and deploy
 
 Run `yarn build` or `yarn build:dev` to build your app, the static files will be placed in `out` folder. Upload those files to any static web hosting services you like.
+
+## Other resources
+
+You can find more details here: [lsaas-docs](https://lsaas-docs.stafi.io/docs/develop_cosmos_lsd/app.html)
