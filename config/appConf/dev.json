@@ -1,6 +1,6 @@
 {
-  "stakeManagerContract": "neutron1humx752uqvxn2jfenh5524md0ta23usm8m2lesaxw47fps28yx5syztnk5",
-  "poolAddress": "cosmos193sx2unjy8u8kyrg247k7evcanmcktk88shv934066wlhm7aqljsng9593",
+  "stakeManagerContract": "neutron1w4lmf2jwfszxkdnceatcex2l38frk78un2t2zyvhggxc3v74w2dqzfvxh2",
+  "poolAddress": "cosmos1p4d5ypwaj2yd74lsszd8an7257cepypgg2nvuptnvnx7spqv989qd32kl5",
   "chains": {
     "neutron": {
       "chainName": "Neutron Testnet",
@@ -44,7 +44,7 @@
       "stakeReserveAmount": 0.05,
       "gasLimit": "80000",
       "isNativeKeplrChain": false,
-      "stakeIbcChannel": "channel-11"
+      "stakeIbcChannel": "channel-46"
     }
   }
 }
