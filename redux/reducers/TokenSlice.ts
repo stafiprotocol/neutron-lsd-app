@@ -24,10 +24,15 @@ import {
   getCosmosTxErrorMsg,
   getNeutronPoolInfo,
   getNeutronWasmClient,
+  getNeutronWithdrawFeeAmount,
   getStakeManagerClient,
 } from "utils/cosmosUtils";
 import { LocalNotice } from "utils/noticeUtils";
-import { amountToChain, chainAmountToHuman } from "utils/numberUtils";
+import {
+  amountToChain,
+  chainAmountToHuman,
+  formatNumber,
+} from "utils/numberUtils";
 import snackbarUtil from "utils/snackbarUtils";
 import {
   addNotice,
@@ -42,7 +47,7 @@ import {
   updateWithdrawLoadingParams,
 } from "./AppSlice";
 import { updateCosmosAccounts } from "./WalletSlice";
-import { PoolInfo } from "codegen/neutron/stakeManager";
+import { Coin, PoolInfo } from "codegen/neutron/stakeManager";
 
 export interface WithdrawInfo {
   overallAmount: string | undefined;
@@ -232,7 +237,7 @@ export const updateLsdTokenUserWithdrawInfo =
       let withdrawableAmount = 0;
       let remainingUnlockEra = 0;
       const unstakeIndexList: number[] = [];
-      userUnstakeList.forEach((item) => {
+      userUnstakeList.forEach((item: any) => {
         const willReceiveTokenAmount = Number(item.amount);
         overallAmount += willReceiveTokenAmount;
         if (item.era + poolInfo.unbonding_period <= poolInfo.era) {
@@ -261,6 +266,13 @@ export const updateLsdTokenUserWithdrawInfo =
         })
       );
     } catch (err: any) {
+      dispatch(
+        setWithdrawInfo({
+          overallAmount: undefined,
+          avaiableWithdraw: undefined,
+          remainingTime: undefined,
+        })
+      );
       console.log({ err });
     }
   };
@@ -654,6 +666,28 @@ export const handleTokenWithdraw =
         gas: "1000000",
       };
 
+      const funds: Coin[] = [];
+      const fundAmount = await getNeutronWithdrawFeeAmount();
+
+      const ntrnBalance = neutronAccount?.allBalances?.find(
+        (item) => item.denom === neutronChainConfig.denom
+      );
+      if (
+        Number(ntrnBalance ? ntrnBalance.amount : 0) <
+        Number(fundAmount) + 0.02
+      ) {
+        throw new Error(
+          `Insufficient NTRN balance, need est. ${formatNumber(
+            Number(chainAmountToHuman(fundAmount, 6)) + 0.02
+          )} NTRN for fee`
+        );
+      }
+
+      funds.push({
+        denom: "untrn",
+        amount: fundAmount + "",
+      });
+
       const signingCosmWasmClient =
         await SigningCosmWasmClient.connectWithSigner(
           neutronChainConfig.restEndpoint,
@@ -671,7 +705,9 @@ export const handleTokenWithdraw =
           receiver,
           unstake_index_list: unstakeIndexList,
         },
-        fee
+        fee,
+        "",
+        funds
       );
 
       if (!executeResult?.transactionHash) {

@@ -1,13 +1,5 @@
-import {
-  CosmWasmClient,
-  SigningCosmWasmClient,
-  ExecuteResult,
-  InstantiateResult,
-} from "@cosmjs/cosmwasm-stargate";
+import { CosmWasmClient, SigningCosmWasmClient, ExecuteResult, InstantiateResult } from "@cosmjs/cosmwasm-stargate"; 
 import { StdFee } from "@cosmjs/amino";
-export interface InstantiateMsg {
-  lsd_token_code_id: number;
-}
 /**
  * A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.
  *
@@ -22,6 +14,7 @@ export interface InstantiateMsg {
  * let c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```
  */
 export type Uint128 = string;
+export type Uint8 = number;
 /**
  * A human readable address.
  *
@@ -56,25 +49,36 @@ export type Binary = string;
  * Describes possible interchain query types
  */
 export type QueryType = "kv" | "tx";
-/**
- * @minItems 3
- * @maxItems 3
- */
-export type TupleOf_IcaInfoAnd_IcaInfoAnd_Addr = [IcaInfo, IcaInfo, Addr];
+export type ArrayOfString = string[];
 export type EraStatus =
   | "register_ended"
   | "init_started"
   | "init_failed"
   | "era_update_started"
   | "era_update_ended"
-  | "bond_started"
-  | "bond_ended"
+  | "era_stake_started"
+  | "era_stake_ended"
   | "withdraw_started"
   | "withdraw_ended"
-  | "rebond_started"
-  | "rebond_ended"
+  | "era_restake_started"
+  | "era_restake_ended"
   | "active_ended";
 export type ValidatorUpdateStatus = "start" | "wait_query_update" | "end";
+/**
+ * A thin wrapper around u128 that is using strings for JSON encoding/decoding, such that the full u128 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.
+ *
+ * # Examples
+ *
+ * Use `from` to create instances of this and `u128` to get the value out:
+ *
+ * ``` # use cosmwasm_std::Uint128; let a = Uint128::from(123u128); assert_eq!(a.u128(), 123);
+ *
+ * let b = Uint128::from(42u64); assert_eq!(b.u128(), 42);
+ *
+ * let c = Uint128::from(70u32); assert_eq!(c.u128(), 70); ```
+ */
+export type Uint1282 = string;
+export type Uint64 = number;
 export type WithdrawStatus = "default" | "pending";
 export type ArrayOfUnstakeInfo = UnstakeInfo[];
 export type String = string;
@@ -89,15 +93,20 @@ export type QueryKind = "balances" | "delegations" | "validators";
 export interface StakeManagerSchema {
   responses:
     | BalanceResponse
+    | Uint8
     | DelegatorDelegationsResponse
     | Uint1281
     | EraSnapshot
     | QueryRegisteredQueryResponse
     | QueryRegisteredQueryResponse1
     | QueryInterchainAccountAddressResponse
-    | TupleOf_IcaInfoAnd_IcaInfoAnd_Addr
+    | IcaInfos
+    | ArrayOfString
     | PoolInfo
+    | QueryIds
     | Stack
+    | Uint1282
+    | Uint64
     | ArrayOfUnstakeInfo
     | String
     | ValidatorResponse;
@@ -108,18 +117,25 @@ export interface StakeManagerSchema {
     | DelegationsArgs
     | ValidatorsArgs
     | PoolInfoArgs
+    | TotalStackFeeArgs
     | EraSnapshotArgs
     | InterchainAccountAddressArgs
     | InterchainAccountAddressFromContractArgs
     | UserUnstakeArgs
     | UserUnstakeIndexArgs
-    | EraRateArgs;
+    | EraRateArgs
+    | UnbondingSecondsArgs
+    | DecimalsArgs
+    | QueryIdsArgs
+    | InterchainAccountIdFromCreatorArgs;
   execute:
     | RegisterPoolArgs
     | InitPoolArgs
-    | MigratePoolArgs
     | ConfigPoolArgs
     | ConfigStackArgs
+    | ConfigPoolStackFeeArgs
+    | ConfigUnbondingSecondsArgs
+    | ConfigDecimalsArgs
     | OpenChannelArgs
     | RedeemTokenForShareArgs
     | StakeArgs
@@ -130,12 +146,13 @@ export interface StakeManagerSchema {
     | PoolUpdateValidatorArgs
     | PoolUpdateValidatorsIcqArgs
     | EraUpdateArgs
-    | EraBondArgs
+    | EraStakeArgs
     | EraCollectWithdrawArgs
-    | EraRebondArgs
+    | EraRestakeArgs
     | EraActiveArgs
     | StakeLsmArgs
     | UpdateIcqUpdatePeriodArgs;
+  instantiate?: InstantiateMsg;
   [k: string]: unknown;
 }
 export interface BalanceResponse {
@@ -282,6 +299,11 @@ export interface QueryInterchainAccountAddressResponse {
   interchain_account_address: string;
   [k: string]: unknown;
 }
+export interface IcaInfos {
+  admin: Addr;
+  pool_address_ica_info: IcaInfo;
+  withdraw_address_ica_info: IcaInfo;
+}
 export interface IcaInfo {
   ctrl_channel_id: string;
   ctrl_connection_id: string;
@@ -314,6 +336,7 @@ export interface PoolInfo {
   redeemming_share_token_denom: string[];
   remote_denom: string;
   share_tokens: Coin[];
+  stack_fee_commission: Uint128;
   status: EraStatus;
   total_lsd_token_amount: Uint128;
   total_platform_fee: Uint128;
@@ -332,13 +355,18 @@ export interface EraSnapshot1 {
   restake_amount: Uint128;
   unbond: Uint128;
 }
+export interface QueryIds {
+  pool_balance_query_id: number;
+  pool_delegations_query_id: number;
+  pool_validators_query_id: number;
+  withdraw_balance_query_id: number;
+}
 export interface Stack {
   admin: Addr;
+  entrusted_pools: string[];
   lsd_token_code_id: number;
-  pools: string[];
   stack_fee_commission: Uint128;
   stack_fee_receiver: Addr;
-  total_stack_fee: Uint128;
 }
 export interface UnstakeInfo {
   amount: Uint128;
@@ -364,6 +392,10 @@ export interface StakingValidator {
  * Validator structure for the querier. Contains validator from staking module
  */
 export interface Validator {
+  /**
+   * consensus_pubkey is the consensus public key of the validator, as a Protobuf Any.
+   */
+  consensus_pubkey?: number[] | null;
   /**
    * delegator_shares defines total shares issued to a validator's delegators.
    */
@@ -450,6 +482,9 @@ export interface ValidatorsArgs {
 export interface PoolInfoArgs {
   pool_addr: string;
 }
+export interface TotalStackFeeArgs {
+  pool_addr: string;
+}
 export interface EraSnapshotArgs {
   pool_addr: string;
 }
@@ -472,6 +507,18 @@ export interface EraRateArgs {
   era: number;
   pool_addr: string;
 }
+export interface UnbondingSecondsArgs {
+  remote_denom: string;
+}
+export interface DecimalsArgs {
+  remote_denom: string;
+}
+export interface QueryIdsArgs {
+  pool_addr: string;
+}
+export interface InterchainAccountIdFromCreatorArgs {
+  addr: Addr;
+}
 export interface RegisterPoolArgs {
   connection_id: string;
   interchain_account_id: string;
@@ -487,42 +534,12 @@ export interface InitPoolArgs {
     "minimal_stake",
     "platform_fee_receiver",
     "remote_denom",
-    "unbonding_period",
     "validator_addrs"
   ];
   properties?: {
     [k: string]: unknown;
   };
-  additionalProperties?: false;
-}
-export interface MigratePoolArgs {
-  type?: "object";
-  required?: [
-    "active",
-    "bond",
-    "channel_id_of_ibc_denom",
-    "era",
-    "era_seconds",
-    "ibc_denom",
-    "interchain_account_id",
-    "lsd_token_name",
-    "lsd_token_symbol",
-    "minimal_stake",
-    "offset",
-    "platform_fee_receiver",
-    "rate",
-    "remote_denom",
-    "share_tokens",
-    "total_lsd_token_amount",
-    "total_platform_fee",
-    "unbond",
-    "unbonding_period",
-    "validator_addrs"
-  ];
-  properties?: {
-    [k: string]: unknown;
-  };
-  additionalProperties?: false;
+  additionalProperties?: never;
 }
 export interface ConfigPoolArgs {
   type?: "object";
@@ -530,15 +547,31 @@ export interface ConfigPoolArgs {
   properties?: {
     [k: string]: unknown;
   };
-  additionalProperties?: false;
+  additionalProperties?: never;
 }
 export interface ConfigStackArgs {
   type?: "object";
   properties?: {
     [k: string]: unknown;
   };
-  additionalProperties?: false;
+  additionalProperties?: never;
   required?: [];
+}
+export interface ConfigPoolStackFeeArgs {
+  type?: "object";
+  required?: ["pool_addr", "stack_fee_commission"];
+  properties?: {
+    [k: string]: unknown;
+  };
+  additionalProperties?: never;
+}
+export interface ConfigUnbondingSecondsArgs {
+  remote_denom: string;
+  unbonding_seconds?: number | null;
+}
+export interface ConfigDecimalsArgs {
+  decimals?: number | null;
+  remote_denom: string;
 }
 export interface OpenChannelArgs {
   closed_channel_id: string;
@@ -580,13 +613,13 @@ export interface PoolUpdateValidatorsIcqArgs {
 export interface EraUpdateArgs {
   pool_addr: string;
 }
-export interface EraBondArgs {
+export interface EraStakeArgs {
   pool_addr: string;
 }
 export interface EraCollectWithdrawArgs {
   pool_addr: string;
 }
-export interface EraRebondArgs {
+export interface EraRestakeArgs {
   pool_addr: string;
 }
 export interface EraActiveArgs {
@@ -597,23 +630,24 @@ export interface StakeLsmArgs {
   pool_addr: string;
 }
 export interface UpdateIcqUpdatePeriodArgs {
-  new_update_period: number;
   pool_addr: string;
 }
+export interface InstantiateMsg {
+  lsd_token_code_id: number;
+  stack_fee_receiver: Addr;
+}
+
 
 function isSigningCosmWasmClient(
   client: CosmWasmClient | SigningCosmWasmClient
 ): client is SigningCosmWasmClient {
-  return "execute" in client;
+  return 'execute' in client;
 }
 
 export class Client {
   private readonly client: CosmWasmClient | SigningCosmWasmClient;
   contractAddress: string;
-  constructor(
-    client: CosmWasmClient | SigningCosmWasmClient,
-    contractAddress: string
-  ) {
+  constructor(client: CosmWasmClient | SigningCosmWasmClient, contractAddress: string) {
     this.client = client;
     this.contractAddress = contractAddress;
   }
@@ -626,499 +660,173 @@ export class Client {
     codeId: number,
     initMsg: InstantiateMsg,
     label: string,
+    fees: StdFee | 'auto' | number,
     initCoins?: readonly Coin[],
-    fees?: StdFee | "auto" | number
   ): Promise<InstantiateResult> {
-    const res = await client.instantiate(
-      sender,
-      codeId,
-      initMsg,
-      label,
-      fees || "auto",
-      {
-        ...(initCoins && initCoins.length && { funds: initCoins }),
-      }
-    );
+    const res = await client.instantiate(sender, codeId, initMsg, label, fees, {
+      ...(initCoins && initCoins.length && { funds: initCoins }),
+    });
     return res;
   }
-  queryGetRegisteredQuery = async (
-    args: GetRegisteredQueryArgs
-  ): Promise<QueryRegisteredQueryResponse> => {
-    return this.client.queryContractSmart(this.contractAddress, {
-      get_registered_query: args,
+  static async instantiate2(
+    client: SigningCosmWasmClient,
+    sender: string,
+    codeId: number,
+    salt: number,
+    initMsg: InstantiateMsg,
+    label: string,
+    fees: StdFee | 'auto' | number,
+    initCoins?: readonly Coin[],
+  ): Promise<InstantiateResult> {
+    const res = await client.instantiate2(sender, codeId, new Uint8Array([salt]), initMsg, label, fees, {
+      ...(initCoins && initCoins.length && { funds: initCoins }),
     });
-  };
-  queryGetIcaRegisteredQuery = async (
-    args: GetIcaRegisteredQueryArgs
-  ): Promise<QueryRegisteredQueryResponse> => {
-    return this.client.queryContractSmart(this.contractAddress, {
-      get_ica_registered_query: args,
-    });
-  };
-  queryBalance = async (args: BalanceArgs): Promise<BalanceResponse> => {
-    return this.client.queryContractSmart(this.contractAddress, {
-      balance: args,
-    });
-  };
-  queryDelegations = async (
-    args: DelegationsArgs
-  ): Promise<DelegatorDelegationsResponse> => {
-    return this.client.queryContractSmart(this.contractAddress, {
-      delegations: args,
-    });
-  };
-  queryValidators = async (
-    args: ValidatorsArgs
-  ): Promise<ValidatorResponse> => {
-    return this.client.queryContractSmart(this.contractAddress, {
-      validators: args,
-    });
-  };
-  queryPoolInfo = async (args: PoolInfoArgs): Promise<PoolInfo> => {
-    return this.client.queryContractSmart(this.contractAddress, {
-      pool_info: args,
-    });
-  };
-  queryStackInfo = async (): Promise<Stack> => {
-    return this.client.queryContractSmart(this.contractAddress, {
-      stack_info: {},
-    });
-  };
-  queryEraSnapshot = async (args: EraSnapshotArgs): Promise<EraSnapshot> => {
-    return this.client.queryContractSmart(this.contractAddress, {
-      era_snapshot: args,
-    });
-  };
-  queryInterchainAccountAddress = async (
-    args: InterchainAccountAddressArgs
-  ): Promise<QueryInterchainAccountAddressResponse> => {
-    return this.client.queryContractSmart(this.contractAddress, {
-      interchain_account_address: args,
-    });
-  };
-  queryInterchainAccountAddressFromContract = async (
-    args: InterchainAccountAddressFromContractArgs
-  ): Promise<TupleOf_IcaInfoAnd_IcaInfoAnd_Addr> => {
-    return this.client.queryContractSmart(this.contractAddress, {
-      interchain_account_address_from_contract: args,
-    });
-  };
-  queryUserUnstake = async (
-    args: UserUnstakeArgs
-  ): Promise<ArrayOfUnstakeInfo> => {
-    return this.client.queryContractSmart(this.contractAddress, {
-      user_unstake: args,
-    });
-  };
-  queryUserUnstakeIndex = async (
-    args: UserUnstakeIndexArgs
-  ): Promise<String> => {
-    return this.client.queryContractSmart(this.contractAddress, {
-      user_unstake_index: args,
-    });
-  };
-  queryEraRate = async (args: EraRateArgs): Promise<Uint128> => {
-    return this.client.queryContractSmart(this.contractAddress, {
-      era_rate: args,
-    });
-  };
-  registerPool = async (
-    sender: string,
-    args: RegisterPoolArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { register_pool: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  initPool = async (
-    sender: string,
-    args: InitPoolArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { init_pool: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  migratePool = async (
-    sender: string,
-    args: MigratePoolArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { migrate_pool: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  configPool = async (
-    sender: string,
-    args: ConfigPoolArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { config_pool: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  configStack = async (
-    sender: string,
-    args: ConfigStackArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { config_stack: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  openChannel = async (
-    sender: string,
-    args: OpenChannelArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { open_channel: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  redeemTokenForShare = async (
-    sender: string,
-    args: RedeemTokenForShareArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { redeem_token_for_share: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  stake = async (
-    sender: string,
-    args: StakeArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { stake: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  unstake = async (
-    sender: string,
-    args: UnstakeArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { unstake: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  withdraw = async (
-    sender: string,
-    args: WithdrawArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { withdraw: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  poolRmValidator = async (
-    sender: string,
-    args: PoolRmValidatorArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { pool_rm_validator: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  poolAddValidator = async (
-    sender: string,
-    args: PoolAddValidatorArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { pool_add_validator: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  poolUpdateValidator = async (
-    sender: string,
-    args: PoolUpdateValidatorArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { pool_update_validator: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  poolUpdateValidatorsIcq = async (
-    sender: string,
-    args: PoolUpdateValidatorsIcqArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { pool_update_validators_icq: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  eraUpdate = async (
-    sender: string,
-    args: EraUpdateArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { era_update: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  eraBond = async (
-    sender: string,
-    args: EraBondArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { era_bond: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  eraCollectWithdraw = async (
-    sender: string,
-    args: EraCollectWithdrawArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { era_collect_withdraw: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  eraRebond = async (
-    sender: string,
-    args: EraRebondArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { era_rebond: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  eraActive = async (
-    sender: string,
-    args: EraActiveArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { era_active: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  stakeLsm = async (
-    sender: string,
-    args: StakeLsmArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { stake_lsm: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
-  updateIcqUpdatePeriod = async (
-    sender: string,
-    args: UpdateIcqUpdatePeriodArgs,
-    fee?: number | StdFee | "auto",
-    memo?: string,
-    funds?: Coin[]
-  ): Promise<ExecuteResult> => {
-    if (!isSigningCosmWasmClient(this.client)) {
-      throw this.mustBeSigningClient();
-    }
-    return this.client.execute(
-      sender,
-      this.contractAddress,
-      { update_icq_update_period: args },
-      fee || "auto",
-      memo,
-      funds
-    );
-  };
+    return res;
+  }
+  queryGetRegisteredQuery = async(args: GetRegisteredQueryArgs): Promise<QueryRegisteredQueryResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, { get_registered_query: args });
+  }
+  queryGetIcaRegisteredQuery = async(args: GetIcaRegisteredQueryArgs): Promise<QueryRegisteredQueryResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, { get_ica_registered_query: args });
+  }
+  queryBalance = async(args: BalanceArgs): Promise<BalanceResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, { balance: args });
+  }
+  queryDelegations = async(args: DelegationsArgs): Promise<DelegatorDelegationsResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, { delegations: args });
+  }
+  queryValidators = async(args: ValidatorsArgs): Promise<ValidatorResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, { validators: args });
+  }
+  queryPoolInfo = async(args: PoolInfoArgs): Promise<PoolInfo> => {
+    return this.client.queryContractSmart(this.contractAddress, { pool_info: args });
+  }
+  queryStackInfo = async(): Promise<Stack> => {
+    return this.client.queryContractSmart(this.contractAddress, { stack_info: {} });
+  }
+  queryTotalStackFee = async(args: TotalStackFeeArgs): Promise<Uint128> => {
+    return this.client.queryContractSmart(this.contractAddress, { total_stack_fee: args });
+  }
+  queryEraSnapshot = async(args: EraSnapshotArgs): Promise<EraSnapshot> => {
+    return this.client.queryContractSmart(this.contractAddress, { era_snapshot: args });
+  }
+  queryInterchainAccountAddress = async(args: InterchainAccountAddressArgs): Promise<QueryInterchainAccountAddressResponse> => {
+    return this.client.queryContractSmart(this.contractAddress, { interchain_account_address: args });
+  }
+  queryInterchainAccountAddressFromContract = async(args: InterchainAccountAddressFromContractArgs): Promise<IcaInfos> => {
+    return this.client.queryContractSmart(this.contractAddress, { interchain_account_address_from_contract: args });
+  }
+  queryUserUnstake = async(args: UserUnstakeArgs): Promise<ArrayOfUnstakeInfo> => {
+    return this.client.queryContractSmart(this.contractAddress, { user_unstake: args });
+  }
+  queryUserUnstakeIndex = async(args: UserUnstakeIndexArgs): Promise<String> => {
+    return this.client.queryContractSmart(this.contractAddress, { user_unstake_index: args });
+  }
+  queryEraRate = async(args: EraRateArgs): Promise<Uint128> => {
+    return this.client.queryContractSmart(this.contractAddress, { era_rate: args });
+  }
+  queryUnbondingSeconds = async(args: UnbondingSecondsArgs): Promise<Uint64> => {
+    return this.client.queryContractSmart(this.contractAddress, { unbonding_seconds: args });
+  }
+  queryDecimals = async(args: DecimalsArgs): Promise<Uint8> => {
+    return this.client.queryContractSmart(this.contractAddress, { decimals: args });
+  }
+  queryQueryIds = async(args: QueryIdsArgs): Promise<QueryIds> => {
+    return this.client.queryContractSmart(this.contractAddress, { query_ids: args });
+  }
+  queryInterchainAccountIdFromCreator = async(args: InterchainAccountIdFromCreatorArgs): Promise<ArrayOfString> => {
+    return this.client.queryContractSmart(this.contractAddress, { interchain_account_id_from_creator: args });
+  }
+  registerPool = async(sender:string, args: RegisterPoolArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { register_pool: args }, fee || "auto", memo, funds);
+  }
+  initPool = async(sender:string, args: InitPoolArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { init_pool: args }, fee || "auto", memo, funds);
+  }
+  configPool = async(sender:string, args: ConfigPoolArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { config_pool: args }, fee || "auto", memo, funds);
+  }
+  configStack = async(sender:string, args: ConfigStackArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { config_stack: args }, fee || "auto", memo, funds);
+  }
+  configPoolStackFee = async(sender:string, args: ConfigPoolStackFeeArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { config_pool_stack_fee: args }, fee || "auto", memo, funds);
+  }
+  configUnbondingSeconds = async(sender:string, args: ConfigUnbondingSecondsArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { config_unbonding_seconds: args }, fee || "auto", memo, funds);
+  }
+  configDecimals = async(sender:string, args: ConfigDecimalsArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { config_decimals: args }, fee || "auto", memo, funds);
+  }
+  openChannel = async(sender:string, args: OpenChannelArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { open_channel: args }, fee || "auto", memo, funds);
+  }
+  redeemTokenForShare = async(sender:string, args: RedeemTokenForShareArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { redeem_token_for_share: args }, fee || "auto", memo, funds);
+  }
+  stake = async(sender:string, args: StakeArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { stake: args }, fee || "auto", memo, funds);
+  }
+  unstake = async(sender:string, args: UnstakeArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { unstake: args }, fee || "auto", memo, funds);
+  }
+  withdraw = async(sender:string, args: WithdrawArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { withdraw: args }, fee || "auto", memo, funds);
+  }
+  poolRmValidator = async(sender:string, args: PoolRmValidatorArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { pool_rm_validator: args }, fee || "auto", memo, funds);
+  }
+  poolAddValidator = async(sender:string, args: PoolAddValidatorArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { pool_add_validator: args }, fee || "auto", memo, funds);
+  }
+  poolUpdateValidator = async(sender:string, args: PoolUpdateValidatorArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { pool_update_validator: args }, fee || "auto", memo, funds);
+  }
+  poolUpdateValidatorsIcq = async(sender:string, args: PoolUpdateValidatorsIcqArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { pool_update_validators_icq: args }, fee || "auto", memo, funds);
+  }
+  eraUpdate = async(sender:string, args: EraUpdateArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { era_update: args }, fee || "auto", memo, funds);
+  }
+  eraStake = async(sender:string, args: EraStakeArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { era_stake: args }, fee || "auto", memo, funds);
+  }
+  eraCollectWithdraw = async(sender:string, args: EraCollectWithdrawArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { era_collect_withdraw: args }, fee || "auto", memo, funds);
+  }
+  eraRestake = async(sender:string, args: EraRestakeArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { era_restake: args }, fee || "auto", memo, funds);
+  }
+  eraActive = async(sender:string, args: EraActiveArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { era_active: args }, fee || "auto", memo, funds);
+  }
+  stakeLsm = async(sender:string, args: StakeLsmArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { stake_lsm: args }, fee || "auto", memo, funds);
+  }
+  updateIcqUpdatePeriod = async(sender:string, args: UpdateIcqUpdatePeriodArgs, fee?: number | StdFee | "auto", memo?: string, funds?: Coin[]): Promise<ExecuteResult> =>  {
+          if (!isSigningCosmWasmClient(this.client)) { throw this.mustBeSigningClient(); }
+    return this.client.execute(sender, this.contractAddress, { update_icq_update_period: args }, fee || "auto", memo, funds);
+  }
 }
