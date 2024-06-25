@@ -58,6 +58,11 @@ export interface WithdrawLoadingParams {
   txHash?: string;
   customMsg?: string;
   relayFee?: string;
+  params?: {
+    unstakeIndexList: number[];
+    withdrawAmount: string;
+    receiver: string;
+  };
 }
 
 export interface LoadingProgressDetailItem {

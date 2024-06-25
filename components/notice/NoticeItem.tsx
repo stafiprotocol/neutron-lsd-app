@@ -215,7 +215,7 @@ export const NoticeItem = (props: {
         openLink(getNoticeUrl(notice));
       }
     } else if (notice.type === "Withdraw") {
-      if (notice.status === "Confirmed") {
+      if (notice.status === "Confirmed" || notice.status === "Error") {
         openLink(getNoticeUrl(notice));
       }
     } else {

@@ -656,6 +656,11 @@ export const handleTokenWithdraw =
           modalVisible: true,
           status: "loading",
           tokenAmount: withdrawAmount,
+          params: {
+            unstakeIndexList,
+            withdrawAmount,
+            receiver,
+          },
         })
       );
 

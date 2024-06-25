@@ -14,6 +14,7 @@ import { RootState } from "redux/store";
 import { formatNumber } from "utils/numberUtils";
 import { roboto } from "config/font";
 import { getTokenName } from "utils/configUtils";
+import { handleTokenWithdraw } from "redux/reducers/TokenSlice";
 
 export const WithdrawLoadingModal = () => {
   const dispatch = useAppDispatch();
@@ -36,9 +37,17 @@ export const WithdrawLoadingModal = () => {
   };
 
   const clickRetry = () => {
-    if (!withdrawLoadingParams) {
+    if (!withdrawLoadingParams?.params) {
       return;
     }
+
+    dispatch(
+      handleTokenWithdraw(
+        withdrawLoadingParams.params.unstakeIndexList,
+        withdrawLoadingParams.params.withdrawAmount,
+        withdrawLoadingParams.params.receiver
+      )
+    );
   };
 
   return (
@@ -140,7 +149,7 @@ export const WithdrawLoadingModal = () => {
           <div className="mt-[.24rem] flex flex-col items-center">
             {withdrawLoadingParams?.scanUrl && (
               <a
-                className="flex items-center"
+                className="mb-[.16rem] flex items-center"
                 href={withdrawLoadingParams?.scanUrl || ""}
                 target="_blank"
                 rel="noreferrer"
