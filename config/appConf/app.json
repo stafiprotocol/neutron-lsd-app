@@ -10,8 +10,8 @@
   },
   "detailedInfo": {
     "audit": {
-      "nameList": ["Blocksec"],
-      "link": "https://github.com/stafiprotocol/security/tree/main/audits/202306_BlockSec_StaFi-BNBStaking"
+      "nameList": ["PeckShield"],
+      "link": "https://github.com/stafiprotocol/security/tree/main/audits/202403_PeckShield_StaFi_CosmWasm"
     },
     "listedIns": [
       {
@@ -23,8 +23,8 @@
   "auditList": [
     {
       "name": "BlockSec",
-      "icon": "/images/audit/block_sec.svg",
-      "iconDark": "/images/audit/block_sec_dark.svg"
+      "icon": "/images/audit/peck_shield.svg",
+      "iconDark": "/images/audit/peck_shield_dark.svg"
     }
   ],
   "faqList": [

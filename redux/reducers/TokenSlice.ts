@@ -228,6 +228,7 @@ export const updateLsdTokenUserWithdrawInfo =
         pool_addr: getPoolAddress(),
         user_neutron_addr: neutronAccount.bech32Address,
       });
+
       // console.log({ userUnstakeList });
 
       // console.log({ poolInfo });
@@ -256,6 +257,8 @@ export const updateLsdTokenUserWithdrawInfo =
           }
         }
       });
+
+      // console.log({ unstakeIndexList });
 
       dispatch(
         setWithdrawInfo({
@@ -712,6 +715,70 @@ export const handleTokenWithdraw =
 
       if (!executeResult?.transactionHash) {
         throw new Error(getCosmosTxErrorMsg(executeResult));
+      }
+
+      let hasFail = false;
+
+      while (true) {
+        const userUnstakeList = await stakeManagerClient.queryUserUnstake({
+          pool_addr: getPoolAddress(),
+          user_neutron_addr: neutronAccount.bech32Address,
+        });
+
+        let allSuccess = true;
+
+        unstakeIndexList.forEach((unstakeIndex) => {
+          const matched = userUnstakeList.find(
+            (item) => item.index === unstakeIndex
+          );
+          if (matched) {
+            allSuccess = false;
+            if (matched.status === "default") {
+              hasFail = true;
+            }
+          }
+        });
+
+        if (allSuccess || hasFail) {
+          break;
+        }
+      }
+
+      if (hasFail) {
+        dispatch(
+          updateWithdrawLoadingParams(
+            {
+              status: "error",
+              broadcastStatus: "error",
+              packStatus: "error",
+              finalizeStatus: "error",
+              txHash: executeResult.transactionHash,
+              scanUrl: getExplorerTxUrl(
+                executeResult.transactionHash,
+                neutronChainConfig.chainId
+              ),
+              customMsg: undefined,
+            },
+            (newParams) => {
+              dispatch(
+                addNotice({
+                  id: uuid(),
+                  type: "Withdraw",
+                  data: {
+                    tokenAmount: withdrawAmount,
+                  },
+                  status: "Error",
+                  scanUrl: getExplorerTxUrl(
+                    executeResult.transactionHash,
+                    neutronChainConfig.chainId
+                  ),
+                })
+              );
+            }
+          )
+        );
+        dispatch(setWithdrawLoading(false));
+        return;
       }
 
       dispatch(updateLsdTokenUserWithdrawInfo());
