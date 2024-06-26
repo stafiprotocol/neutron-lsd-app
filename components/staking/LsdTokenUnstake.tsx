@@ -110,7 +110,12 @@ export const LsdTokenUnstake = () => {
       return "--";
     }
     return (
-      Number(unstakeAmount) * Number(lsdTokenRate) - Number(redeemFee) + ""
+      Math.max(
+        0,
+        Number(unstakeAmount) * Number(lsdTokenRate) -
+          Number(redeemFee) -
+          0.000005
+      ) + ""
     );
   }, [unstakeAmount, lsdTokenRate, redeemFee]);
 
