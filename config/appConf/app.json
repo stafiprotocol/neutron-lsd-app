@@ -1,100 +1,100 @@
 {
-  "appTitle": "Neutron LSD App",
-  "chain": {
-    "supportChains": ["Neutron"]
-  },
-  "icons": {
-    "tokenImg": "/images/token/token_green.svg",
-    "lsdTokenImg": "/images/token/lsdToken.svg",
-    "chainImg": "/images/neutron_chain.png"
-  },
-  "detailedInfo": {
-    "audit": {
-      "nameList": ["PeckShield"],
-      "link": "https://github.com/stafiprotocol/security/tree/main/audits/202403_PeckShield_StaFi_CosmWasm"
-    },
-    "listedIns": [
-      {
-        "name": "CoinGecko",
-        "link": "https://www.coingecko.com/en/coins/stafi-staked-atom"
-      }
-    ]
-  },
-  "auditList": [
-    {
-      "name": "BlockSec",
-      "icon": "/images/audit/peck_shield.svg",
-      "iconDark": "/images/audit/peck_shield_dark.svg"
-    }
-  ],
-  "faqList": [
-    {
-      "title": "What are the factors that affect the staking rewards?",
-      "contents": [
-        {
-          "type": "text",
-          "content": "Reward normally is updated every 24 hours.\n"
-        },
-        {
-          "type": "text",
-          "content": "rATOM liquid staking rewards are mainly decided by the Cosmos chain's staking APR, delegation strategy and the original validator's slash risks."
-        }
-      ]
-    },
-    {
-      "title": "How to calculate rATOM exchange rate?",
-      "contents": [
-        {
-          "type": "text",
-          "content": "rATOM exchange rate is recording how many ATOMs could be unstaked with 1 rATOM token. It will start from 1 and gradually increase along with the staking rewards generated continuously.\n"
-        },
-        {
-          "type": "link",
-          "content": "Check more details",
-          "link": "https://docs.stafi.io/rtoken/#rtoken-exchange-rate"
-        }
-      ]
-    }
-  ],
-  "externalLinkList": [
-    {
-      "name": "Docs",
-      "link": "https://docs.stafi.io/"
-    },
-    {
-      "name": "Website",
-      "link": "https://www.stafi.io/"
-    },
-    {
-      "name": "DAO Forum",
-      "link": "https://dao.stafi.io/"
-    },
-    {
-      "name": "Dune Dashboard",
-      "link": "https://dune.com/stafi-analysis/stafi"
-    },
-    {
-      "name": "rATOM Listing",
-      "link": "https://docs.stafi.io/"
-    }
-  ],
-  "contactList": [
-    {
-      "type": "Twitter",
-      "link": "https://twitter.com/Stafi_Protocol"
-    },
-    {
-      "type": "Medium",
-      "link": "https://stafi-protocol.medium.com/"
-    },
-    {
-      "type": "Discord",
-      "link": "https://discord.com/invite/jB77etn"
-    },
-    {
-      "type": "Telegram",
-      "link": "https://t.me/stafi_protocol"
-    }
-  ],
-  "tokenPriceUrl": "https://api.coingecko.com/api/v3/simple/price?ids=cosmos,neutron-3&vs_currencies=usd"
+	"appTitle": "Neutron LSD App",
+	"chain": {
+		"supportChains": ["Neutron"]
+	},
+	"icons": {
+		"tokenImg": "/images/token/token_green.svg",
+		"lsdTokenImg": "/images/token/lsdToken.svg",
+		"chainImg": "/images/neutron_chain.png"
+	},
+	"detailedInfo": {
+		"audit": {
+			"nameList": ["PeckShield"],
+			"link": "https://github.com/stafiprotocol/security/tree/main/audits/202403_PeckShield_StaFi_CosmWasm"
+		},
+		"listedIns": [
+			{
+				"name": "CoinGecko",
+				"link": "https://www.coingecko.com/en/coins/stafi-staked-atom"
+			}
+		]
+	},
+	"auditList": [
+		{
+			"name": "BlockSec",
+			"icon": "/images/audit/peck_shield.svg",
+			"iconDark": "/images/audit/peck_shield_dark.svg"
+		}
+	],
+	"faqList": [
+		{
+			"title": "What are the factors that affect the staking rewards?",
+			"contents": [
+				{
+					"type": "text",
+					"content": "Reward normally is updated every 24 hours.\n"
+				},
+				{
+					"type": "text",
+					"content": "rATOM liquid staking rewards are mainly decided by the Cosmos chain's staking APR, delegation strategy and the original validator's slash risks."
+				}
+			]
+		},
+		{
+			"title": "How to calculate rATOM exchange rate?",
+			"contents": [
+				{
+					"type": "text",
+					"content": "rATOM exchange rate is recording how many ATOMs could be unstaked with 1 rATOM token. It will start from 1 and gradually increase along with the staking rewards generated continuously.\n"
+				},
+				{
+					"type": "link",
+					"content": "Check more details",
+					"link": "https://docs.stafi.io/stake/rtoken/#rtoken-exchange-rate"
+				}
+			]
+		}
+	],
+	"externalLinkList": [
+		{
+			"name": "Docs",
+			"link": "https://docs.stafi.io/"
+		},
+		{
+			"name": "Website",
+			"link": "https://www.stafi.io/"
+		},
+		{
+			"name": "DAO Forum",
+			"link": "https://dao.stafi.io/"
+		},
+		{
+			"name": "Dune Dashboard",
+			"link": "https://dune.com/stafi-analysis/stafi"
+		},
+		{
+			"name": "rATOM Listing",
+			"link": "https://docs.stafi.io/"
+		}
+	],
+	"contactList": [
+		{
+			"type": "Twitter",
+			"link": "https://twitter.com/Stafi_Protocol"
+		},
+		{
+			"type": "Medium",
+			"link": "https://stafi-protocol.medium.com/"
+		},
+		{
+			"type": "Discord",
+			"link": "https://discord.com/invite/jB77etn"
+		},
+		{
+			"type": "Telegram",
+			"link": "https://t.me/stafi_protocol"
+		}
+	],
+	"tokenPriceUrl": "https://api.coingecko.com/api/v3/simple/price?ids=cosmos,neutron-3&vs_currencies=usd"
 }
