@@ -4,6 +4,7 @@ import walletReducer from "./reducers/WalletSlice";
 import tokenReducer from "./reducers/TokenSlice";
 import lsdTokenReducer from "./reducers/LsdTokenSlice";
 import redelegateReducer from "./reducers/RedelegateSlice";
+import bridgeReducer from "./reducers/BridgeSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     token: tokenReducer,
     lsdToken: lsdTokenReducer,
     redelegate: redelegateReducer,
+    bridge: bridgeReducer,
   },
 });
 

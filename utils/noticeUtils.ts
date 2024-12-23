@@ -5,6 +5,7 @@ import {
   STORAGE_KEY_UNREAD_NOTICE,
 } from "./storageUtils";
 import dayjs from "dayjs";
+import { ChainConfig } from "interfaces/common";
 import {
   RedelegateLoadingParams,
   StakeLoadingParams,
@@ -22,7 +23,12 @@ export interface LocalNotice {
   timestamp?: number;
 }
 
-export type NoticeType = "Stake" | "Unstake" | "Withdraw" | "Redelegate";
+export type NoticeType =
+  | "Stake"
+  | "Unstake"
+  | "Withdraw"
+  | "Redelegate"
+  | "Bridge";
 
 export type NoticeStatus = "Pending" | "Error" | "Cancelled" | "Confirmed";
 
@@ -34,7 +40,8 @@ export interface NoticeTxDetail {
 export type NoticeDataType =
   | NoticeWithdrawData
   | NoticeStakeData
-  | NoticeUnstakeData;
+  | NoticeUnstakeData
+  | NoticeBridgeData;
 
 export interface NoticeUnstakeData {
   amount: string;
@@ -49,6 +56,13 @@ export interface NoticeStakeData {
 
 export interface NoticeWithdrawData {
   tokenAmount: string;
+}
+
+export interface NoticeBridgeData {
+  amount: string;
+  srcChain: ChainConfig;
+  dstChain: ChainConfig;
+  receiver: string;
 }
 
 export function addNoticeInternal(newNotice: LocalNotice) {

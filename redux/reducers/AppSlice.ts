@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { ChainConfig } from "interfaces/common";
 import { AppThunk } from "redux/store";
 import {
   addNoticeInternal,
@@ -65,6 +66,17 @@ export interface WithdrawLoadingParams {
   };
 }
 
+export interface BridgeLoadingParams {
+  modalVisible?: boolean;
+  status?: "loading" | "success" | "error";
+  tokenAmount?: string;
+  scanUrl?: string;
+  srcChain?: ChainConfig;
+  dstChain?: ChainConfig;
+  displayMsg?: string;
+  txHash?: string;
+}
+
 export interface LoadingProgressDetailItem {
   totalStatus?: "loading" | "success" | "error";
   broadcastStatus?: "loading" | "success" | "error";
@@ -112,10 +124,12 @@ export interface AppState {
   stakeLoading: boolean;
   unstakeLoading: boolean;
   withdrawLoading: boolean;
+  bridgeLoading: boolean;
   stakeLoadingParams: StakeLoadingParams | undefined;
   unstakeLoadingParams: UnstakeLoadingParams | undefined;
   withdrawLoadingParams: WithdrawLoadingParams | undefined;
   redelegateLoadingParams: RedelegateLoadingParams | undefined;
+  bridgeLoadingParams: BridgeLoadingParams | undefined;
 }
 
 const initialState: AppState = {
@@ -126,10 +140,12 @@ const initialState: AppState = {
   stakeLoading: false,
   unstakeLoading: false,
   withdrawLoading: false,
+  bridgeLoading: false,
   stakeLoadingParams: undefined,
   unstakeLoadingParams: undefined,
   withdrawLoadingParams: undefined,
   redelegateLoadingParams: undefined,
+  bridgeLoadingParams: undefined,
 };
 
 export const appSlice = createSlice({
@@ -165,6 +181,9 @@ export const appSlice = createSlice({
     setWithdrawLoading: (state: AppState, action: PayloadAction<boolean>) => {
       state.withdrawLoading = action.payload;
     },
+    setBridgeLoading: (state: AppState, action: PayloadAction<boolean>) => {
+      state.bridgeLoading = action.payload;
+    },
     setStakeLoadingParams: (
       state: AppState,
       action: PayloadAction<StakeLoadingParams | undefined>
@@ -189,6 +208,19 @@ export const appSlice = createSlice({
     ) => {
       state.redelegateLoadingParams = action.payload;
     },
+    setBridgeLoadingParams: (
+      state: AppState,
+      action: PayloadAction<BridgeLoadingParams | undefined>
+    ) => {
+      if (!action.payload) {
+        state.bridgeLoadingParams = undefined;
+      } else {
+        state.bridgeLoadingParams = {
+          ...state.bridgeLoadingParams,
+          ...action.payload,
+        };
+      }
+    },
   },
 });
 
@@ -200,10 +232,12 @@ export const {
   setStakeLoading,
   setUnstakeLoading,
   setWithdrawLoading,
+  setBridgeLoading,
   setStakeLoadingParams,
   setUnstakeLoadingParams,
   setWithdrawLoadingParams,
   setRedelegateLoadingParams,
+  setBridgeLoadingParams,
 } = appSlice.actions;
 
 export default appSlice.reducer;

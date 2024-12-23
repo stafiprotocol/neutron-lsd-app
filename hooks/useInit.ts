@@ -19,6 +19,7 @@ import {
 import { useAppDispatch } from "./common";
 import { useAppSlice } from "./selector";
 import { useInterval } from "./useInterval";
+import { updateTargetsChainTokenBalances } from "redux/reducers/BridgeSlice";
 
 export function useInit() {
   const dispatch = useAppDispatch();
@@ -64,6 +65,7 @@ export function useInit() {
   useEffect(() => {
     dispatch(updateCosmosTokenBalances());
     dispatch(updateNeutronPoolInfo());
+    dispatch(updateTargetsChainTokenBalances());
   }, [dispatch, updateFlag]);
 
   // Change body backgroundColor

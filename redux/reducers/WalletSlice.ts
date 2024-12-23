@@ -10,6 +10,7 @@ import {
   isCosmosNetworkAllowed,
 } from "utils/storageUtils";
 import { AppThunk } from "../store";
+import { bridgeTargetsChainConfig } from "config/bridge";
 
 export interface WalletState {
   cosmosAccounts: CosmosAccountMap;

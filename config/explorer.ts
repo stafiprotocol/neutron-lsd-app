@@ -2,6 +2,7 @@ import { isDev } from "./env";
 import appDevConfig from "./appConf/dev.json";
 import appProdConfig from "./appConf/prod.json";
 import { lsdTokenChainConfig, neutronChainConfig } from "./chain";
+import { bridgeTargetsChainConfig } from "./bridge";
 
 export function getExplorerUrl(chainId?: string) {
   if (chainId === lsdTokenChainConfig.chainId) {
@@ -29,4 +30,18 @@ export function getExplorerTokenTxUrl(address: any, chainId?: string) {
     return `${getExplorerUrl(chainId)}/address/${address}#tokentxns`;
   }
   return `${getExplorerUrl(chainId)}/address/${address}#tokentxns`;
+}
+
+export function getBridgeTargetChainExplorerUrl(chainId: string) {
+  const chainConfig = bridgeTargetsChainConfig.find(
+    (conf) => conf.chainId === chainId
+  );
+  return chainConfig?.explorerUrl || "";
+}
+
+export function getBridgeTargetChainExplorerTxUrl(
+  chainId: string,
+  txHash: string
+) {
+  return `${getBridgeTargetChainExplorerUrl(chainId)}/tx/${txHash}`;
 }

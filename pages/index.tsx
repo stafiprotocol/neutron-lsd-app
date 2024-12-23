@@ -3,6 +3,7 @@ import { CustomTag } from "components/common/CustomTag";
 import { FaqItem } from "components/common/FaqItem";
 import { PageTitleContainer } from "components/common/PageTitleContainer";
 import { Icomoon } from "components/icon/Icomoon";
+import BridgePage from "components/staking/BridgePage";
 import { DashboardTabs } from "components/staking/DashboardTabs";
 import { RedelegatePage } from "components/staking/RedelegatePage";
 import { StakePage } from "components/staking/StakePage";
@@ -68,6 +69,7 @@ const TokenPage = () => {
         case "unstake":
         case "liquidStake":
         case "withdraw":
+        case "bridge":
           return tabParam;
         default:
           return "stake";
@@ -236,6 +238,8 @@ const TokenPage = () => {
               {selectedTab === "withdraw" && (
                 <WithdrawUnstaked withdrawInfo={withdrawInfo} />
               )}
+
+              {selectedTab === "bridge" && <BridgePage />}
             </div>
 
             <div className="ml-[.87rem] flex-1">

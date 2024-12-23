@@ -931,6 +931,21 @@
     ts-proto "1.88.0"
     typescript "4.9.5"
 
+"@stafihub/types@^2.7.3":
+  version "2.7.3"
+  resolved "https://registry.yarnpkg.com/@stafihub/types/-/types-2.7.3.tgz#8bec221037b1750f0256021d35ad253fa80f44c4"
+  integrity sha512-/vmoHb5k3C4gzgdXvqrBDOW/8XA8UJJh4Zvd+y8oXqeFeZ4WLax5tKNr/szNn+jZhtCTgNt8yFfromaqT++j3A==
+  dependencies:
+    "@cosmjs/amino" "0.32.2"
+    "@cosmjs/proto-signing" "0.32.2"
+    "@cosmjs/stargate" "0.32.2"
+    "@cosmjs/tendermint-rpc" "0.32.2"
+    "@osmonauts/lcd" "0.11.1"
+    long "4.0.0"
+    protobufjs "6.11.2"
+    ts-proto "1.88.0"
+    typescript "4.9.5"
+
 "@swc/helpers@0.5.2":
   version "0.5.2"
   resolved "https://registry.npmmirror.com/@swc/helpers/-/helpers-0.5.2.tgz#85ea0c76450b61ad7d10a37050289eded783c27d"
@@ -1336,7 +1351,7 @@ base-x@^3.0.2:
   dependencies:
     safe-buffer "^5.0.1"
 
-base64-js@^1.3.0:
+base64-js@^1.3.0, base64-js@^1.5.1:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-1.5.1.tgz#1b1b440160a5bf7ad40b650f095963481903930a"
   integrity sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==
@@ -1634,6 +1649,11 @@ cross-spawn@^7.0.2:
     path-key "^3.1.0"
     shebang-command "^2.0.0"
     which "^2.0.1"
+
+crypto@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/crypto/-/crypto-1.0.1.tgz#2af1b7cad8175d24c8a1b0778255794a21803037"
+  integrity sha512-VxBKmeNcqQdiUQUW2Tzq0t377b54N2bMtXO/qiLa+6eRRmmC4qT3D4OnTGoT/U6O9aklQ/jTwbOtRMTTY8G0Ig==
 
 css-vendor@^2.0.8:
   version "2.0.8"

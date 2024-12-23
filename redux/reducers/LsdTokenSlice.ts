@@ -126,7 +126,9 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
     const currentEra = poolInfo.era;
 
     let annualizedDays = 7;
-    let numEras = Math.ceil((60 * 60 * 24 * annualizedDays) / Number(eraSeconds));
+    let numEras = Math.ceil(
+      (60 * 60 * 24 * annualizedDays) / Number(eraSeconds)
+    );
 
     if (currentEra - numEras <= 0) {
       annualizedDays = 1;
@@ -159,7 +161,9 @@ export const updateApr = (): AppThunk => async (dispatch, getState) => {
       beginRate !== Number(amountToChain(1, neutronChainConfig.decimals)) &&
       beginRate !== endRate
     ) {
-      apr = ((endRate - beginRate) / beginRate / annualizedDays) * 365.25 * 100 + "";
+      apr =
+        ((endRate - beginRate) / beginRate / annualizedDays) * 365.25 * 100 +
+        "";
     }
   } catch (err: any) {
     console.error({ err });

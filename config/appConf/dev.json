@@ -46,5 +46,32 @@
       "isNativeKeplrChain": false,
       "stakeIbcChannel": "channel-46"
     }
+  },
+  "bridge": {
+    "cw20ics20Contract": "neutron1c0mesgj64ddx8vudrju8v9x0gx6he5dd83g5ywwr2pwxhmfcjtnqrmtnd8",
+    "neutron": {
+      "bridgeChannel": "channel-1551",
+      "icon": "/images/bridge/neutron.png"
+    },
+    "targets": [
+      {
+        "chainName": "Cosmos-Testnet",
+        "chainId": "cosmos-stafi-1",
+        "rpc": "https://test-cosmos-rpc1.stafihub.io",
+        "restEndpoint": "https://test-cosmos-rpc1.stafihub.io",
+        "explorerUrl": "https://testnet-explorer.stafihub.io/cosmos-testnet",
+        "decimals": 6,
+        "bridgeChannel": "channel-71",
+        "icon": "/images/bridge/cosmoshub.svg",
+        "bech32Config": {
+          "bech32PrefixAccAddr": "cosmos",
+          "bech32PrefixAccPub": "cosmospub",
+          "bech32PrefixValAddr": "cosmosvaloper",
+          "bech32PrefixValPub": "cosmosvaloperpub",
+          "bech32PrefixConsAddr": "cosmosvalcons",
+          "bech32PrefixConsPub": "cosmosvalconspub"
+        }
+      }
+    ]
   }
 }

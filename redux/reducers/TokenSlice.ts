@@ -430,6 +430,7 @@ export const handleTokenStake =
       dispatch(setStakeLoading(false));
       cb && cb(true);
     } catch (err: any) {
+      console.log(err);
       cb && cb(false);
       dispatch(setStakeLoading(false));
       let displayMsg = err.message || TRANSACTION_FAILED_MESSAGE;

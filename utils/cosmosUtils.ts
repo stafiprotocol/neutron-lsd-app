@@ -14,6 +14,7 @@ import { ChainConfig, Coin, CosmosAccount } from "interfaces/common";
 import { chainAmountToHuman } from "./numberUtils";
 import { saveCosmosNetworkAllowedFlag } from "./storageUtils";
 import { Client as StakeManagerClient } from "codegen/neutron/stakeManager";
+import { createHash } from "crypto";
 
 let neutronWasmClient: CosmWasmClient;
 let stakeManagerClient: StakeManagerClient;
@@ -72,7 +73,9 @@ export const _connectKeplr = async (chainConfig: ChainConfig) => {
 
     saveCosmosNetworkAllowedFlag(chainConfig.chainId);
     return account;
-  } catch (err: any) {}
+  } catch (err: any) {
+    console.log(err);
+  }
   return null;
 };
 
@@ -220,3 +223,13 @@ export async function getNeutronWithdrawFeeAmount() {
 
   return fundAmount;
 }
+
+export const getBridgeChainDenom = (
+  channel: string,
+  lsdTokenAddress: string
+) => {
+  const hash = createHash("sha256");
+  hash.update(`transfer/${channel}/cw20:${lsdTokenAddress}`);
+  const denom = hash.digest("hex").toUpperCase();
+  return `ibc/${denom}`;
+};

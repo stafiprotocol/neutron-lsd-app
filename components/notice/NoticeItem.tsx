@@ -6,6 +6,7 @@ import Image from "next/image";
 import stakeIcon from "public/images/notice/notice_stake.svg";
 import unstakeIcon from "public/images/notice/notice_unstake.svg";
 import withdrawIcon from "public/images/notice/notice_withdraw.svg";
+import swapIcon from "public/images/notice/notice_swap.svg";
 import { useEffect } from "react";
 import {
   setStakeLoadingParams,
@@ -16,6 +17,7 @@ import { openLink } from "utils/commonUtils";
 import { getLsdTokenName, getTokenName } from "utils/configUtils";
 import {
   LocalNotice,
+  NoticeBridgeData,
   NoticeStakeData,
   NoticeUnstakeData,
   NoticeWithdrawData,
@@ -101,6 +103,8 @@ export const NoticeItem = (props: {
         return unstakeIcon;
       case "Withdraw":
         return withdrawIcon;
+      case "Bridge":
+        return swapIcon;
       default:
         return stakeIcon;
     }
@@ -153,6 +157,12 @@ export const NoticeItem = (props: {
         } ${getTokenName()} from your wallet to StaFi Pool Contract, and receive ${formatNumber(
           data.willReceiveAmount
         )} ${getLsdTokenName()}.`;
+      }
+      if (notice.type === "Bridge") {
+        data = notice.data as NoticeBridgeData;
+        return `Swap ${data.amount} ${getLsdTokenName()} from ${
+          data.srcChain.chainName
+        } to ${data.dstChain.chainName}`;
       }
     } catch (err: unknown) {}
 

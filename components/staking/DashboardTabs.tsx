@@ -3,8 +3,10 @@ import { useRouter } from "next/router";
 import { useMemo } from "react";
 
 interface Props {
-  selectedTab: "stake" | "unstake" | "liquidStake" | "withdraw";
-  onChangeTab: (tab: "stake" | "unstake" | "liquidStake" | "withdraw") => void;
+  selectedTab: "stake" | "unstake" | "liquidStake" | "withdraw" | "bridge";
+  onChangeTab: (
+    tab: "stake" | "unstake" | "liquidStake" | "withdraw" | "bridge"
+  ) => void;
   showWithdrawTab?: boolean;
   showLiquidStakeTab?: boolean;
 }
@@ -21,11 +23,13 @@ export const DashboardTabs = (props: Props) => {
     <div
       className={classNames(
         "p-[.04rem] h-[.42rem] grid items-stretch bg-color-bg2 rounded-[.3rem]",
-        showLiquidStakeTab && showWithdraw ? "w-[4rem]" : "w-[2.2rem]"
+        showLiquidStakeTab && showWithdraw ? "w-[4rem]" : "w-[3.2rem]"
       )}
       style={{
         gridTemplateColumns:
-          showLiquidStakeTab && showWithdraw ? "25% 45% 30%" : "40% 60%",
+          showLiquidStakeTab && showWithdraw
+            ? "20% 30% 30% 20%"
+            : "30% 40% 30%",
       }}
     >
       <div
@@ -70,6 +74,18 @@ export const DashboardTabs = (props: Props) => {
           </div>
         </div>
       )}
+
+      <div
+        className={classNames(
+          "cursor-pointer flex items-center justify-center text-[.16rem] rounded-[.3rem]",
+          props.selectedTab === "bridge"
+            ? "text-color-highlight bg-color-highlight"
+            : "text-color-text1"
+        )}
+        onClick={() => props.onChangeTab("bridge")}
+      >
+        Bridge
+      </div>
     </div>
   );
 };

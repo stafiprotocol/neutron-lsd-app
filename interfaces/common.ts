@@ -36,6 +36,8 @@ export interface ChainConfig {
   stakeReserveAmount?: number;
   gasLimit?: string;
   stakeIbcChannel?: string;
+  icon?: string;
+  bridgeChannel?: string;
 }
 
 export interface LsmBalanceItem {
