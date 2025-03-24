@@ -1,6 +1,6 @@
-export const STORAGE_KEY_DARK_MODE = "evm_lsd_dark_mode_v2";
-export const STORAGE_KEY_NOTICE = "evm_lsd_notice_v2";
-export const STORAGE_KEY_UNREAD_NOTICE = "evm_lsd_unread_notice_v2";
+export const STORAGE_KEY_DARK_MODE = "neutron_lsd_dark_mode_v2";
+export const STORAGE_KEY_NOTICE = "neutron_lsd_notice_v2";
+export const STORAGE_KEY_UNREAD_NOTICE = "neutron_lsd_unread_notice_v2";
 export const STORAGE_KEPLR_WALLET_ALLOWED =
   "neutron_lsd_keplr_network_allowed_";
 
