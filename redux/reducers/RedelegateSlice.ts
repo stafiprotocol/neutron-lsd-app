@@ -5,7 +5,6 @@ import { isKeplrCancelError, timeout, uuid } from "utils/commonUtils";
 import {
   getNeutronPoolInfo,
   getNeutronWasmClient,
-  getStakeManagerClient,
   getWasmIbcTransferMessage,
 } from "utils/cosmosUtils";
 import snackbarUtil from "utils/snackbarUtils";
@@ -33,7 +32,6 @@ import {
 import { Coin } from "@cosmjs/proto-signing";
 import { getPoolAddress, getStakeManagerContract } from "config/contract";
 import { LocalNotice, NoticeStatus } from "utils/noticeUtils";
-import { getTokenName } from "utils/configUtils";
 import { getExplorerTxUrl } from "config/explorer";
 import { LsdToken } from "codegen/neutron";
 import { updateCosmosTokenBalances } from "./TokenSlice";
